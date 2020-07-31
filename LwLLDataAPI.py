@@ -64,7 +64,7 @@ def deactivate_session(session_token, session="all"):
             r = requests.post(f"{url}/deactivate_session", json={'session_token': current_session},
                               headers=headers_active_session)
     else:
-        if session not in all_sessions:
+        if session not in all_active_sessions:
             print("ERROR: This session does not exist!")
         else:
             r = requests.post(f"{url}/deactivate_session", json={'session_token': session},
