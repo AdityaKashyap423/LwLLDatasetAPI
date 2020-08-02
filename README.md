@@ -4,14 +4,14 @@
 The script *LwLLDataAPI.py* takes the following command line arguments:
 * *--secret* The secret key
 * *--mode*
-	* *training_data_new* Creates a new session and saves the training and test data for the first checkpoint to the given folder. All previous sessions are deactivated
+	* *training_data_new* Creates a new session and saves the training and test data (*arabic.train,english.train,arabic.test*) for the first checkpoint to the given folder. All previous sessions are deactivated
 	* *training_data_continue*  Continues with the most recent session and saves the training and test data for the next checkpoint
-	* *submit_predictions* Submits the given predictions to the LwLL website
+	* *submit_predictions* Submits the given predictions (*english.test*) to the LwLL website
 * *--data_folder* The folder in which the *ted_talks* and *global_voices* lwll datasets have been downloaded. The download instructions are provided below
-* *--pred_path* The path of the file containing the predictions on the test data. This should be a csv file with columns "id" and "text". (See the *create_sample_pred_file()* function to get a better understanding of the format)
+* *--pred_path* The path of the file containing the predictions on the test data (*english.test*). This should be a text file with 1 line per prediction.   
 * *--save_path* The folder in which:
-	* the formatted training data and test data will be saved
-	* the prediction submission response will be saved
+	* the formatted training data and test data will be saved (*arabic.train,english.train,arabic.test*)
+	* the prediction submission response will be saved (*Submission_Response.txt*)
 
 ## Step 1: Download the LWLL datasets
 
@@ -27,15 +27,11 @@ Run the following command:
 	
 	python LwLLDataAPI.py --secret SECRET_KEY --mode training_data_new --data_folder DATA_FOLDER --save_path SAVE_PATH
 
-This should create two files *train.npy* and *test.npy* in the SAVE_PATH folder
-	* *train.npy*: This is a dictionary object saved using numpy, that also contains metadata. Each training instance contains an id, the english sentence and the arabic translation
-	* *test.npy*: This is a dictionary object saved using numpy. Each test instance contains an id along with an arabic sentence
-
-Look at the function *load_file_example()* to get a better understanding of these files
+This should create three files (*arabic.train,english.train,arabic.test*) in the SAVE_PATH folder
 
 ## Step 3: Create Prediction File and Submit it
 
-First, create the prediction file according to the required format (see the *create_sample_pred_file()* function to get a better understanding)
+First, create the prediction file (*english.test*) with one prediction per line
 
 Next, submit the prediction file using the following command:
 	
@@ -49,7 +45,7 @@ Run the following command:
 	
 	python LwLLDataAPI.py --secret SECRET_KEY --mode training_data_continue --data_folder DATA_FOLDER --save_path SAVE_PATH
 
-Similar to step 2, it will save a new *train.npy* file and a *test.npy* file to the SAVE_PATH folder.
+Similar to step 2, it will save new files (*arabic.train,english.train,arabic.test*) to the SAVE_PATH folder.
 
 Following this, repeat Step 3.
 
@@ -58,7 +54,7 @@ Following this, repeat Step 3.
 ## Step 5: Continue receiving training and test data, and submitting predicitons
 
 Repeat step 4 14 more times for a total of 16 checkpoints. Look at lines 325 to 330 of *LwLLDataAPI.py* for a rough sketch of the pipeline
-	
+	 
 
 
 

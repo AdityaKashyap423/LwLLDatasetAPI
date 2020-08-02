@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 import requests
+import re
 
 url = 'https://api-dev.lollllz.com'
 data_type = 'full'
@@ -191,6 +192,17 @@ def df_to_dict(df):
     return final_dict
 
 
+def save_to_file(data,save_path,filename):
+    with open(save_path + filename, "w") as f:
+        for line in data:
+            if line:
+                f.write(re.sub("\r|\n"," ",line))
+                f.write("\n")
+            else:
+                f.write("None")
+                f.write("\n")
+
+
 def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path):
     all_data = {}
 
@@ -202,17 +214,35 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
     metadata['session_token'] = session_token
     metadata['checkpoint_number'] = checkpoint_number
 
-    all_data["train"] = data
     all_data["metadata"] = metadata
 
     if data_type == "train":
-        np.save(save_path + "train.npy", all_data)
+        np.save(save_path + "metadata.npy", all_data)
+        eng = []
+        ar = []
+        for element in data:
+            eng.append(element["english"])
+            ar.append(element["arabic"])
+
+        save_to_file(eng,save_path,"english.train")
+        save_to_file(ar,save_path,"arabic.train")
+
+
     elif data_type == "test":
-        np.save(save_path + "test.npy", data)
+
+        ar = []
+        ID = []
+        for key in data.keys():
+            ID.append(key)
+            ar.append(data[key])
+
+
+        save_to_file(ar,save_path,"arabic.test")
+        save_to_file(ID,save_path,"ID.test")
 
 
 def load_previous_checkpoint_data(save_path):
-    save_path = save_path + "train.npy"
+    save_path = save_path + "metadata.npy"
     data = np.load(save_path, allow_pickle=True).item()
     return data['metadata']
 
@@ -256,6 +286,16 @@ def get_test_data(session_token, path, save_path):
     test_df = df_to_dict(test_df)
     save_data(test_df, [], session_token, "N/A", "test", save_path)
 
+def create_random_predictions(save_path):
+    with open(save_path + "ID.test") as f:
+        data_len = len(f.read().split("\n")[:-1])
+
+    random_pred = ["This is a random prediction" for _ in range(data_len)]    
+    with open(save_path + "english.test","w") as f:
+        for line in random_pred:
+            f.write(line)
+            f.write("\n")
+
 
 def submit_predictions(pred_path, save_path):
     metadata = load_previous_checkpoint_data(save_path)
@@ -263,7 +303,18 @@ def submit_predictions(pred_path, save_path):
     session_token = metadata['session_token']
     checkpoint_number = metadata['checkpoint_number']
 
-    pred_df = pd.read_csv(pred_path)
+    pred_df = []
+    with open(save_path + "ID.test") as f:
+        IDs = f.read().split("\n")[:-1]
+
+    with open(pred_path) as f:
+        preds = f.read().split("\n")[:-1]     
+
+    for ID,pred in zip(IDs,preds):
+        pred_df.append({"id":ID,"text":pred})
+
+    pred_df = pd.DataFrame(pred_df)
+
 
     headers = {'user_secret': secret, 'session_token': session_token}
     r = requests.post(f"{url}/submit_predictions", json={'predictions': pred_df.to_dict()}, headers=headers)
@@ -272,29 +323,10 @@ def submit_predictions(pred_path, save_path):
         f.write(str(r.json()))
 
 
-def create_sample_pred_file():
-    pred_df = pd.DataFrame([{"id": a, "text": "This is random"} for a in range(63949, 65949)])
-    pred_df.to_csv("/nlp/data/kashyap/LWLL/Pipeline/saved_data/sample_pred.csv", index=False)
-
-
-def load_file_example(save_path, data_type):
-    if data_type == "train":
-        data = np.load(save_path + "train.npy", allow_pickle=True).item()
-        data = data["train"]
-
-    elif data_type == "test":
-        data = np.load(save_path + "test.npy", allow_pickle=True).item()
-
-    print(data)
-
-    return data
-
 
 if __name__ == '__main__':
 
     mode, data_folder, pred_path, secret, save_path = get_command_line_arguments()
-
-    # load_file_example(save_path,"test")
 
     if mode == 'training_data_new':
         training_data_new(data_folder, save_path)
@@ -303,11 +335,17 @@ if __name__ == '__main__':
         training_data_continue(data_folder, save_path)
 
     elif mode == 'submit_predictions':
+        # create_random_predictions(save_path)
         submit_predictions(pred_path, save_path)
+ 
+# for i in range(16): 
+#     if i == 0:
+#         training_data_new(data_folder, save_path)
+#     else:
+#         training_data_continue(data_folder, save_path)
 
-# for i in range(16):
-# 	if i == 0:
-# 		training_data_new(data_folder, save_path)
-# 	else:
-# 		training_data_continue(data_folder, save_path)
-# 	submit_predictions(pred_path,save_path)
+
+#     create_random_predictions(save_path)
+#     submit_predictions(pred_path,save_path)
+
+
