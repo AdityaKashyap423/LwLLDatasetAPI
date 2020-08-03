@@ -194,13 +194,9 @@ def df_to_dict(df):
 
 def save_to_file(data,save_path,filename):
     with open(save_path + filename, "w") as f:
-        for line in data:
-            if line:
-                f.write(re.sub("\r|\n"," ",line))
-                f.write("\n")
-            else:
-                f.write("None")
-                f.write("\n")
+        f.write("\n".join(data))
+        f,write("\n")
+
 
 
 def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path):
@@ -221,8 +217,8 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         eng = []
         ar = []
         for element in data:
-            eng.append(element["english"])
-            ar.append(element["arabic"])
+            eng.append(element["english"].replace("\r", ""))
+            ar.append(element["arabic"].replace("\r", ""))
 
         save_to_file(eng,save_path,"english.train")
         save_to_file(ar,save_path,"arabic.train")
