@@ -195,7 +195,7 @@ def df_to_dict(df):
 def save_to_file(data,save_path,filename):
     with open(save_path + filename, "w") as f:
         f.write("\n".join(data))
-        f,write("\n")
+        f.write("\n")
 
 
 
