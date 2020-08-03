@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 import requests
 
+from ImageTranslate import create_mt_batches
+from ImageTranslate.textprocessor import TextProcessor
+
 url = 'https://api-dev.lollllz.com'
 data_type = 'full'
 task_id = '06023f86-a66b-4b2c-8b8b-951f5edd0f22'  # For machine translation
@@ -221,6 +224,11 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
 
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
+        tokenizer = TextProcessor(os.path.dirname(os.path.realpath(__file__)) + "/tok")
+
+        create_mt_batches.write(text_processor=tokenizer, output_file=os.path.join(save_path, "train.batch"),
+                                src_txt_file=os.path.join(save_path, "arabic.train"),
+                                dst_txt_file=os.path.join(save_path, "english.train"))
 
 
     elif data_type == "test":
@@ -256,6 +264,7 @@ def training_data_new(path, save_path):
     training_data, already_queried = get_training_labels(all_training_ids, already_queried, train_df, session_token)
 
     save_data(training_data, already_queried, session_token, checkpoint_number, "train", save_path)
+
     get_test_data(session_token, DATASETS_PATH, save_path)
 
 
