@@ -43,3 +43,22 @@ class TrainOptions:
         self.decoder_layer = 6
         self.ignore_mt_mass = True
         self.tie_embed = False
+
+
+class TranslateOptions:
+    def __init__(self):
+        self.input_path = None
+        self.src_lang = "ar"
+        self.target_lang = "en"
+        self.output_path = None
+        self.batch = 512
+        self.tokenizer_path=None
+        self.model_path = None
+        self.verbose = False
+        self.beam_width = 5
+        self.max_len_a = 1.3
+        self.max_len_b = 5
+        self.len_penalty_ratio = 0.8
+        self.total_capacity = 150
+        self.fp16 = True
+

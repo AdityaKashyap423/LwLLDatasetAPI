@@ -9,7 +9,8 @@ import requests
 
 import create_mt_batches
 import train_image_mt
-from mt_options import TrainOptions
+import translate
+from mt_options import TrainOptions, TranslateOptions
 from textprocessor import TextProcessor
 
 url = 'https://api-dev.lollllz.com'
@@ -215,6 +216,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
     metadata['checkpoint_number'] = checkpoint_number
 
     all_data["metadata"] = metadata
+    tok_path = os.path.dirname(os.path.realpath(__file__)) + "/tok"
 
     if data_type == "train":
         np.save(os.path.join(save_path, "metadata.npy"), all_data)
@@ -226,7 +228,6 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
 
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
-        tok_path = os.path.dirname(os.path.realpath(__file__)) + "/tok"
         tokenizer = TextProcessor(tok_path)
 
         create_mt_batches.write(text_processor=tokenizer, output_file=os.path.join(save_path, "train.batch"),
@@ -252,6 +253,16 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
 
         save_to_file(ar, save_path, "arabic.test")
         save_to_file(ID, save_path, "ID.test")
+
+        print("Translating ...")
+        translate_options = TranslateOptions()
+        translate_options.mt_train_path = os.path.join(save_path, "train.batch")
+        translate_options.model_path = os.path.join(save_path, "train.model")
+        translate_options.tokenizer_path = tok_path
+        translate_options.input_path = os.path.join(save_path, "arabic.test")
+        translate_options.output_path = os.path.join(save_path, "english.test.output")
+        translate.translate(translate_options)
+        print("Translating done!")
 
 
 def load_previous_checkpoint_data(save_path):

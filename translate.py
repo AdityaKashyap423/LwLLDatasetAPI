@@ -19,7 +19,6 @@ def get_lm_option_parser():
     parser.add_option("--output", dest="output_path", metavar="FILE", default=None)
     parser.add_option("--batch", dest="batch", help="Batch size", type="int", default=512)
     parser.add_option("--tok", dest="tokenizer_path", help="Path to the tokenizer folder", metavar="FILE", default=None)
-    parser.add_option("--cache_size", dest="cache_size", help="Number of blocks in cache", type="int", default=300)
     parser.add_option("--model", dest="model_path", metavar="FILE", default=None)
     parser.add_option("--verbose", action="store_true", dest="verbose", help="Include input!", default=False)
     parser.add_option("--beam", dest="beam_width", type="int", default=4)
@@ -87,16 +86,14 @@ def build_model(options):
     num_gpu = torch.cuda.device_count()
     generator = BeamDecoder(model, beam_width=options.beam_width, max_len_a=options.max_len_a,
                             max_len_b=options.max_len_b, len_penalty_ratio=options.len_penalty_ratio)
-    if options.fp16:
+    if options.fp16 and torch.cuda.is_available():
         generator = amp.initialize(generator, opt_level="O2")
     if num_gpu > 1:
         generator = DataParallelModel(generator)
     return generator, model.text_processor
 
 
-if __name__ == "__main__":
-    parser = get_lm_option_parser()
-    (options, args) = parser.parse_args()
+def translate(options):
     generator, text_processor = build_model(options)
     test_loader = build_data_loader(options, text_processor)
     sen_count = 0
@@ -111,6 +108,11 @@ if __name__ == "__main__":
                 else:
                     writer.write("\n".join([y + "\n" + x + "\n****" for x, y in zip(mt_output, src_text)]))
                 writer.write("\n")
-
     print(datetime.datetime.now(), "Translated", sen_count, "sentences")
     print(datetime.datetime.now(), "Done!")
+
+
+if __name__ == "__main__":
+    parser = get_lm_option_parser()
+    (options, args) = parser.parse_args()
+    translate(options)
