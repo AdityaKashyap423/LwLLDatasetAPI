@@ -8,6 +8,8 @@ import pandas as pd
 import requests
 
 import create_mt_batches
+import train_image_mt
+from mt_options import TrainOptions
 from textprocessor import TextProcessor
 
 url = 'https://api-dev.lollllz.com'
@@ -224,11 +226,20 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
 
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
-        tokenizer = TextProcessor(os.path.dirname(os.path.realpath(__file__)) + "/tok")
+        tok_path = os.path.dirname(os.path.realpath(__file__)) + "/tok"
+        tokenizer = TextProcessor(tok_path)
 
         create_mt_batches.write(text_processor=tokenizer, output_file=os.path.join(save_path, "train.batch"),
                                 src_txt_file=os.path.join(save_path, "arabic.train"),
                                 dst_txt_file=os.path.join(save_path, "english.train"))
+        train_options = TrainOptions()
+        train_options.mt_train_path = os.path.join(save_path, "train.batch")
+        train_options.step = int(min(100000, len(eng) * 100))
+        print("Training for", train_options.step, "iterations!")
+        train_options.model_path = os.path.join(save_path, "train.model")
+        train_options.tokenizer_path = tok_path
+        train_image_mt.ImageDocTrainer.train(train_options)
+        print("Training Done!")
 
 
     elif data_type == "test":

@@ -299,8 +299,8 @@ class ImageDocTrainer:
                                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
                                 print("BLEU:", bleu)
 
-                            model.save(saving_path + ".latest")
-                            with open(os.path.join(saving_path + ".latest", "optim"), "wb") as fp:
+                            model.save(saving_path + "")
+                            with open(os.path.join(saving_path + "", "optim"), "wb") as fp:
                                 pickle.dump(self.optimizer, fp)
 
                         start, tokens, cur_loss = time.time(), 0, 0
@@ -320,7 +320,7 @@ class ImageDocTrainer:
 
         try:
             print("Total loss in this epoch: %f" % (total_loss / total_tokens))
-            model.save(saving_path + ".latest")
+            model.save(saving_path + "")
 
             if mt_dev_iter is not None:
                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
