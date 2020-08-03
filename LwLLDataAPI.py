@@ -1,11 +1,11 @@
 import argparse
+import os
 from pathlib import Path
 from typing import List
 
 import numpy as np
 import pandas as pd
 import requests
-import re
 
 url = 'https://api-dev.lollllz.com'
 data_type = 'full'
@@ -192,11 +192,10 @@ def df_to_dict(df):
     return final_dict
 
 
-def save_to_file(data,save_path,filename):
-    with open(save_path + filename, "w") as f:
+def save_to_file(data, save_path, filename):
+    with open(os.path.join(save_path, filename), "w") as f:
         f.write("\n".join(data))
         f.write("\n")
-
 
 
 def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path):
@@ -213,15 +212,15 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
     all_data["metadata"] = metadata
 
     if data_type == "train":
-        np.save(save_path + "metadata.npy", all_data)
+        np.save(os.path.join(save_path, "metadata.npy"), all_data)
         eng = []
         ar = []
         for element in data:
             eng.append(element["english"].replace("\r", ""))
             ar.append(element["arabic"].replace("\r", ""))
 
-        save_to_file(eng,save_path,"english.train")
-        save_to_file(ar,save_path,"arabic.train")
+        save_to_file(eng, save_path, "english.train")
+        save_to_file(ar, save_path, "arabic.train")
 
 
     elif data_type == "test":
@@ -232,13 +231,12 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
             ID.append(key)
             ar.append(data[key])
 
-
-        save_to_file(ar,save_path,"arabic.test")
-        save_to_file(ID,save_path,"ID.test")
+        save_to_file(ar, save_path, "arabic.test")
+        save_to_file(ID, save_path, "ID.test")
 
 
 def load_previous_checkpoint_data(save_path):
-    save_path = save_path + "metadata.npy"
+    save_path = os.path.join(save_path, "metadata.npy")
     data = np.load(save_path, allow_pickle=True).item()
     return data['metadata']
 
@@ -282,12 +280,13 @@ def get_test_data(session_token, path, save_path):
     test_df = df_to_dict(test_df)
     save_data(test_df, [], session_token, "N/A", "test", save_path)
 
+
 def create_random_predictions(save_path):
-    with open(save_path + "ID.test") as f:
+    with open(os.path.join(save_path, "ID.test")) as f:
         data_len = len(f.read().split("\n")[:-1])
 
-    random_pred = ["This is a random prediction" for _ in range(data_len)]    
-    with open(save_path + "english.test","w") as f:
+    random_pred = ["This is a random prediction" for _ in range(data_len)]
+    with open(os.path.join(save_path, "english.test"), "w") as f:
         for line in random_pred:
             f.write(line)
             f.write("\n")
@@ -300,24 +299,22 @@ def submit_predictions(pred_path, save_path):
     checkpoint_number = metadata['checkpoint_number']
 
     pred_df = []
-    with open(save_path + "ID.test") as f:
+    with open(os.path.join(save_path, "ID.test")) as f:
         IDs = f.read().split("\n")[:-1]
 
     with open(pred_path) as f:
-        preds = f.read().split("\n")[:-1]     
+        preds = f.read().split("\n")[:-1]
 
-    for ID,pred in zip(IDs,preds):
-        pred_df.append({"id":ID,"text":pred})
+    for ID, pred in zip(IDs, preds):
+        pred_df.append({"id": ID, "text": pred})
 
     pred_df = pd.DataFrame(pred_df)
-
 
     headers = {'user_secret': secret, 'session_token': session_token}
     r = requests.post(f"{url}/submit_predictions", json={'predictions': pred_df.to_dict()}, headers=headers)
 
-    with open(save_path + "Submission_Response.txt", "w") as f:
+    with open(os.path.join(save_path, "Submission_Response.txt"), "w") as f:
         f.write(str(r.json()))
-
 
 
 if __name__ == '__main__':
@@ -333,7 +330,7 @@ if __name__ == '__main__':
     elif mode == 'submit_predictions':
         # create_random_predictions(save_path)
         submit_predictions(pred_path, save_path)
- 
+
 # for i in range(16): 
 #     if i == 0:
 #         training_data_new(data_folder, save_path)
@@ -343,5 +340,3 @@ if __name__ == '__main__':
 
 #     create_random_predictions(save_path)
 #     submit_predictions(pred_path,save_path)
-
-
