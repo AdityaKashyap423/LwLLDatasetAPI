@@ -23,11 +23,12 @@ def get_command_line_arguments():
     parser.add_argument('--secret', '-secret', required=True)
     parser.add_argument('--mode', '-mode', required=True)
     parser.add_argument('--data_folder', '-data_folder')
-    parser.add_argument('--pred_path', '-pred_path')
     parser.add_argument('--save_path', '-save_path')
     parser.add_argument('--enc', '-enc', type=int, default=6)
     parser.add_argument('--dec', '-dec', type=int, default=6)
     parser.add_argument('--embed', '-embed', type=int, default=768)
+    parser.add_argument('--iter', '-iter', type=int, default=100000)
+    parser.add_argument('--beam', '-beam', type=int, default=5)
     args = vars(parser.parse_args())
     global secret
 
@@ -37,10 +38,6 @@ def get_command_line_arguments():
     save_path = args["save_path"]
     if (mode == "training_data_new" or mode == "training_data_continue") and (data_path is None or save_path is None):
         print("For mode = training_data_new/continue, --data_folder and --save_path is required!")
-        exit(1)
-
-    if mode == "submit_predictions" and (pred_path is None or save_path is None):
-        print("For mode = submit_predictions, --pred_path and --save_path is required!")
         exit(1)
 
     return args
@@ -237,13 +234,14 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        train_options.step = int(min(100000, len(eng) * 100))
+        train_options.step = int(min(args["iter"], len(eng) * 100))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
         train_options.tokenizer_path = tok_path
         train_options.encoder_layer = args["enc"]
         train_options.decoder_layer = args["dec"]
         train_options.embed_dim = args["embed"]
+        train_options.beam_width = args["beam"]
         train_image_mt.ImageDocTrainer.train(train_options)
         print("Training Done!")
 
@@ -265,6 +263,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         translate_options.tokenizer_path = tok_path
         translate_options.input_path = os.path.join(save_path, "arabic.test")
         translate_options.output_path = os.path.join(save_path, "english.test.output")
+        translate_options.beam_width = args["beam"]
         translate.translate(translate_options)
         print("Translating done!")
 
@@ -327,7 +326,7 @@ def create_random_predictions(save_path):
             f.write("\n")
 
 
-def submit_predictions(pred_path, save_path):
+def submit_predictions(save_path):
     metadata = load_previous_checkpoint_data(save_path)
 
     session_token = metadata['session_token']
@@ -337,7 +336,7 @@ def submit_predictions(pred_path, save_path):
     with open(os.path.join(save_path, "ID.test")) as f:
         IDs = f.read().split("\n")[:-1]
 
-    with open(pred_path) as f:
+    with open(os.path.join(save_path, "english.test.output")) as f:
         preds = f.read().split("\n")[:-1]
 
     for ID, pred in zip(IDs, preds):
@@ -358,20 +357,19 @@ if __name__ == '__main__':
     secret = args["secret"]
     mode = args["mode"]
     data_folder = args["data_folder"]
-    pred_path = args["pred_path"]
     save_path = args["save_path"]
 
     if mode == 'training_data_new':
         training_data_new(data_folder, save_path, args)
+        submit_predictions(save_path)
+        print("Done with submitting predictions")
 
     elif mode == 'training_data_continue':
         training_data_continue(data_folder, save_path, args)
+        submit_predictions(save_path)
+        print("Done with submitting predictions")
 
-    elif mode == 'submit_predictions':
-        # create_random_predictions(save_path)
-        submit_predictions(pred_path, save_path)
-
-# for i in range(16): 
+# for i in range(16):
 #     if i == 0:
 #         training_data_new(data_folder, save_path)
 #     else:
