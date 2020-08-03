@@ -20,19 +20,21 @@ task_id = '06023f86-a66b-4b2c-8b8b-951f5edd0f22'  # For machine translation
 
 def get_command_line_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-secret', '--secret', required=True)
-    parser.add_argument('-mode', '--mode', required=True)
-    parser.add_argument('-data_folder', '--data_folder')
-    parser.add_argument('-pred_path', '--pred_path')
-    parser.add_argument('-save_path', '--save_path')
+    parser.add_argument('--secret', '-secret', required=True)
+    parser.add_argument('--mode', '-mode', required=True)
+    parser.add_argument('--data_folder', '-data_folder')
+    parser.add_argument('--pred_path', '-pred_path')
+    parser.add_argument('--save_path', '-save_path')
+    parser.add_argument('--enc', '-enc', type=int, default=6)
+    parser.add_argument('--dec', '-dec', type=int, default=6)
+    parser.add_argument('--embed', '-embed', type=int, default=768)
     args = vars(parser.parse_args())
     global secret
+
     secret = args["secret"]
     mode = args["mode"]
     data_path = args["data_folder"]
-    pred_path = args["pred_path"]
     save_path = args["save_path"]
-
     if (mode == "training_data_new" or mode == "training_data_continue") and (data_path is None or save_path is None):
         print("For mode = training_data_new/continue, --data_folder and --save_path is required!")
         exit(1)
@@ -41,7 +43,7 @@ def get_command_line_arguments():
         print("For mode = submit_predictions, --pred_path and --save_path is required!")
         exit(1)
 
-    return mode, data_path, pred_path, secret, save_path
+    return args
 
 
 def create_session():
@@ -204,7 +206,7 @@ def save_to_file(data, save_path, filename):
         f.write("\n")
 
 
-def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path):
+def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path, args):
     all_data = {}
 
     if checkpoint_number == 8:
@@ -239,12 +241,14 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
         train_options.tokenizer_path = tok_path
+        train_options.encoder_layer = args["enc"]
+        train_options.decoder_layer = args["dec"]
+        train_options.embed_dim = args["embed"]
         train_image_mt.ImageDocTrainer.train(train_options)
         print("Training Done!")
 
 
     elif data_type == "test":
-
         ar = []
         ID = []
         for key in data.keys():
@@ -271,7 +275,7 @@ def load_previous_checkpoint_data(save_path):
     return data['metadata']
 
 
-def training_data_new(path, save_path):
+def training_data_new(path, save_path, args):
     checkpoint_number = 1
 
     session_token = create_session()
@@ -285,12 +289,12 @@ def training_data_new(path, save_path):
 
     training_data, already_queried = get_training_labels(all_training_ids, already_queried, train_df, session_token)
 
-    save_data(training_data, already_queried, session_token, checkpoint_number, "train", save_path)
+    save_data(training_data, already_queried, session_token, checkpoint_number, "train", save_path, args)
 
-    get_test_data(session_token, DATASETS_PATH, save_path)
+    get_test_data(session_token, DATASETS_PATH, save_path, args)
 
 
-def training_data_continue(path, save_path):
+def training_data_continue(path, save_path, args):
     metadata = load_previous_checkpoint_data(save_path)
 
     session_token = metadata['session_token']
@@ -302,14 +306,14 @@ def training_data_continue(path, save_path):
     all_training_ids = list(train_df["id"])
 
     training_data, already_queried = get_training_labels(all_training_ids, already_queried, train_df, session_token)
-    save_data(training_data, already_queried, session_token, checkpoint_number, "train", save_path)
-    get_test_data(session_token, DATASETS_PATH, save_path)
+    save_data(training_data, already_queried, session_token, checkpoint_number, "train", save_path, args)
+    get_test_data(session_token, DATASETS_PATH, save_path, args)
 
 
-def get_test_data(session_token, path, save_path):
+def get_test_data(session_token, path, save_path, args):
     test_df = get_test_data_mt(path, session_token)
     test_df = df_to_dict(test_df)
-    save_data(test_df, [], session_token, "N/A", "test", save_path)
+    save_data(test_df, [], session_token, "N/A", "test", save_path, args)
 
 
 def create_random_predictions(save_path):
@@ -350,13 +354,18 @@ def submit_predictions(pred_path, save_path):
 
 if __name__ == '__main__':
 
-    mode, data_folder, pred_path, secret, save_path = get_command_line_arguments()
+    args = get_command_line_arguments()
+    secret = args["secret"]
+    mode = args["mode"]
+    data_folder = args["data_folder"]
+    pred_path = args["pred_path"]
+    save_path = args["save_path"]
 
     if mode == 'training_data_new':
-        training_data_new(data_folder, save_path)
+        training_data_new(data_folder, save_path, args)
 
     elif mode == 'training_data_continue':
-        training_data_continue(data_folder, save_path)
+        training_data_continue(data_folder, save_path, args)
 
     elif mode == 'submit_predictions':
         # create_random_predictions(save_path)
