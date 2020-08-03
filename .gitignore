@@ -1,7 +1,9 @@
 
-.idea/inspectionProfiles/profiles_settings.xml
-.idea/LwLLDatasetAPI.iml
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/workspace.xml
+*.xml
+*.iml
+*.pyc
+*.0
+.DS_Store
+pytorch_lamb
+tests/images
+*.npz
