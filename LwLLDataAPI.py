@@ -36,8 +36,8 @@ def get_command_line_arguments():
     mode = args["mode"]
     data_path = args["data_folder"]
     save_path = args["save_path"]
-    if (mode == "training_data_new" or mode == "training_data_continue") and (data_path is None or save_path is None):
-        print("For mode = training_data_new/continue, --data_folder and --save_path is required!")
+    if (mode == "new" or mode == "continue") and (data_path is None or save_path is None):
+        print("For mode = new/continue, --data_folder and --save_path is required!")
         exit(1)
 
     return args
@@ -81,19 +81,19 @@ def get_train_data_mt(dataset_path: Path, session_token: str) -> List[str]:
     """
     Helper method to dynamically get the test labels and give us the possible classes that can be submitted
     for the current dataset
-    
+
     Params
     ------
-    
+
     dataset_path : Path
         The path to the `development` dataset downloads
-    
+
     session_token : str
         Your current session token so that we can look up the current session metadata
-    
+
     Returns
     -------
-    
+
     pd.DataFrame
         The DataFrame on which you can make queries against
     """
@@ -112,19 +112,19 @@ def get_test_data_mt(dataset_path: Path, session_token: str) -> List[str]:
     """
     Helper method to dynamically get the test labels and give us the possible classes that can be submitted
     for the current dataset
-    
+
     Params
     ------
-    
+
     dataset_path : Path
         The path to the `development` dataset downloads
-    
+
     session_token : str
         Your current session token so that we can look up the current session metadata
-    
+
     Returns
     -------
-    
+
     pd.DataFrame
         The DataFrame on which you must make predictions from a 'source' column
     """
@@ -374,19 +374,19 @@ if __name__ == '__main__':
     data_folder = args["data_folder"]
     save_path = args["save_path"]
 
-    if mode == 'training_data_new':
+    if mode == 'new':
         training_data_new(data_folder, save_path, args)
         submit_predictions(save_path)
         print("Done with submitting predictions")
 
-    elif mode == 'training_data_continue':
+    elif mode == 'continue':
         training_data_continue(data_folder, save_path, args)
         submit_predictions(save_path)
         print("Done with submitting predictions")
 
 # for i in range(16):
 #     if i == 0:
-#         training_data_new(data_folder, save_path)
+#         new(data_folder, save_path)
 #     else:
 #         training_data_continue(data_folder, save_path)
 
