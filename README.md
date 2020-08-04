@@ -1,5 +1,25 @@
 # LwLLDatasetAPI
 
+## Docker Commands
+
+Here is a simple example for running the docker:
+
+* Build the docker in command line:
+```bash
+docker build ~/Projects/LwLLDatasetAPI/dockers/cpu/ -t ady
+```
+
+* Start the docker
+```bash
+docker run -it  ady
+```
+Then we can run the following command for the first checkpoint
+```bash
+python3 -u LwLLDataAPI.py --secret b6a37fbc-8295-48dc-8560-18ffcdbbdcad --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH --enc 1 --dec 1 --embed 96 --iter 1 --beam 1
+```
+
+## Details
+
 
 The script *LwLLDataAPI.py* takes the following command line arguments:
 * *--secret* The secret key
