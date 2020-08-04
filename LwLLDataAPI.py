@@ -225,6 +225,12 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
             eng.append(element["english"].replace("\r", ""))
             ar.append(element["arabic"].replace("\r", ""))
 
+
+        if checkpoint_number != 1:
+            ar_prev, eng_prev = load_training_data(save_path)
+            ar = ar_prev + ar
+            eng = eng_prev + eng
+
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
         tokenizer = TextProcessor(tok_path)
@@ -349,6 +355,17 @@ def submit_predictions(save_path):
 
     with open(os.path.join(save_path, "Submission_Response.txt"), "w") as f:
         f.write(str(r.json()))
+
+
+def load_training_data(save_path):
+
+    with open(save_path + "english.train") as f:
+        eng = f.read().split("\n")[:-1]
+
+    with open(save_path + "arabic.train") as f:
+        ar = f.read().split("\n")[:-1]
+
+    return ar,eng
 
 
 if __name__ == '__main__':
