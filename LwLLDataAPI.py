@@ -225,7 +225,6 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
             eng.append(element["english"].replace("\r", ""))
             ar.append(element["arabic"].replace("\r", ""))
 
-
         if checkpoint_number != 1:
             ar_prev, eng_prev = load_training_data(save_path)
             ar = ar_prev + ar
@@ -358,14 +357,13 @@ def submit_predictions(save_path):
 
 
 def load_training_data(save_path):
-
-    with open(save_path + "english.train") as f:
+    with open(os.path.join(save_path, "english.train")) as f:
         eng = f.read().split("\n")[:-1]
 
-    with open(save_path + "arabic.train") as f:
+    with open(os.path.join(save_path, "arabic.train")) as f:
         ar = f.read().split("\n")[:-1]
 
-    return ar,eng
+    return ar, eng
 
 
 if __name__ == '__main__':
