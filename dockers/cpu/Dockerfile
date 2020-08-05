@@ -22,6 +22,7 @@ RUN python3 -m pip install torchvision==0.5.0
 RUN python3 -m pip install ipython
 RUN python3 -m pip install transformers==2.9.0
 RUN python3 -m pip install pandas
+RUN python3 -m pip install pyarrow
 
 WORKDIR /lwll
 RUN cd /lwll
@@ -29,11 +30,15 @@ RUN mkdir /lwll/development
 RUN mkdir /lwll/development/global_voices
 RUN mkdir /lwll/development/ted_talks
 RUN mkdir /lwll/models
-RUN export DATA_FOLDER=/lwll/development
-RUN export SAVE_FOLDER=/lwll/models
+ENV DATA_FOLDER=/lwll/development
+ENV SAVE_PATH=/lwll/models
+RUN echo 'alias python="python3"' >> ~/.bashrc
 
 RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 WORKDIR /lwll/LwLLDatasetAPI
+
+RUN python download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER --overwrite True
+RUN python download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER --overwrite True
 
 CMD ["/bin/bash"]
