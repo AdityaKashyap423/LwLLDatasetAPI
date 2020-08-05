@@ -38,10 +38,6 @@ RUN echo 'alias python="python3"' >> ~/.bashrc
 
 RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
-WORKDIR /lwll/LwLLDatasetAPI/dataset_prep
-
-RUN python3 download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER --overwrite True
-RUN python3 download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER --overwrite True
 
 WORKDIR /lwll/LwLLDatasetAPI/
 
