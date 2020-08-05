@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
 from IPython.core import ultratb
-from apex import amp
 from torch.nn.utils.rnn import pad_sequence
 
 import dataset
@@ -71,6 +70,7 @@ class ImageDocTrainer:
 
         self.fp16 = False
         if self.num_gpu == 1 and fp16:
+            from apex import amp
             self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O2")
             self.fp16 = True
 

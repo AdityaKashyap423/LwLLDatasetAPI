@@ -4,7 +4,6 @@ from typing import Dict
 
 import torch
 import torch.optim as optim
-from apex import amp
 from torch.nn.utils.rnn import pad_sequence
 
 from textprocessor import TextProcessor
@@ -83,6 +82,7 @@ def mass_unmask(src_text, src_mask, masked_ids):
 
 def backward(loss, optimizer, fp16: bool = False):
     if fp16 and torch.cuda.device_count() == 1:
+        from apex import amp
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
     else:

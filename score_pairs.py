@@ -5,7 +5,6 @@ from optparse import OptionParser
 
 import torch
 import torch.nn.functional as F
-from apex import amp
 from torch.nn.utils.rnn import pad_sequence
 
 from seq2seq import Seq2Seq, future_mask
@@ -68,6 +67,7 @@ if __name__ == "__main__":
 
     assert num_gpu <= 1
     if options.fp16:
+        from apex import amp
         model = amp.initialize(model, opt_level="O2")
 
     max_capacity = options.total_capacity * 1000000

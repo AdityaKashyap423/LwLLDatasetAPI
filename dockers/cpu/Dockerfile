@@ -32,12 +32,6 @@ RUN mkdir /lwll/models
 RUN export DATA_FOLDER=/lwll/development
 RUN export SAVE_FOLDER=/lwll/models
 
-RUN ls -l
-
-RUN git clone https://www.github.com/nvidia/apex
-RUN ls -l
-RUN python3 -m pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" apex/
-
 RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 WORKDIR /lwll/LwLLDatasetAPI

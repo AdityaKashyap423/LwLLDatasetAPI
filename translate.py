@@ -3,7 +3,6 @@ from optparse import OptionParser
 
 import torch
 import torch.utils.data as data_utils
-from apex import amp
 
 import dataset
 from parallel import DataParallelModel
@@ -87,6 +86,7 @@ def build_model(options):
     generator = BeamDecoder(model, beam_width=options.beam_width, max_len_a=options.max_len_a,
                             max_len_b=options.max_len_b, len_penalty_ratio=options.len_penalty_ratio)
     if options.fp16 and torch.cuda.is_available():
+        from apex import amp
         generator = amp.initialize(generator, opt_level="O2")
     if num_gpu > 1:
         generator = DataParallelModel(generator)
