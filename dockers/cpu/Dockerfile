@@ -23,6 +23,8 @@ RUN python3 -m pip install ipython
 RUN python3 -m pip install transformers==2.9.0
 RUN python3 -m pip install pandas
 RUN python3 -m pip install pyarrow
+RUN python3 -m pip install fire
+RUN python3 -m pip install boto3
 
 WORKDIR /lwll
 RUN cd /lwll
@@ -36,9 +38,11 @@ RUN echo 'alias python="python3"' >> ~/.bashrc
 
 RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
-WORKDIR /lwll/LwLLDatasetAPI
+WORKDIR /lwll/LwLLDatasetAPI/dataset_prep
 
-RUN python download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER --overwrite True
-RUN python download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER --overwrite True
+RUN python3 download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER --overwrite True
+RUN python3 download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER --overwrite True
+
+WORKDIR /lwll/LwLLDatasetAPI/
 
 CMD ["/bin/bash"]

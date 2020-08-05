@@ -1,0 +1,18 @@
+cache:
+  paths:
+    - venv/
+
+stages:
+  - test
+
+validation:
+  image: python:3.7
+  stage: test
+  script:
+    - python -V
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - mypy .
+    - flake8
