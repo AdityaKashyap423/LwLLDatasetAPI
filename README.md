@@ -15,7 +15,7 @@ docker run -it  ady
 ```
 Then we can run the following command for the first checkpoint
 ```bash
-python3 -u LwLLDataAPI.py --secret b6a37fbc-8295-48dc-8560-18ffcdbbdcad --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH --enc 1 --dec 1 --embed 96 --iter 1 --beam 1
+python3 -u LwLLDataAPI.py --secret $SECRET_KEY --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH --enc 1 --dec 1 --embed 96 --iter 1 --beam 1
 ```
 
 ## Details
