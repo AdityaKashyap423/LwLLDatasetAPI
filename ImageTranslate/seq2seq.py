@@ -6,10 +6,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import lm_config
-from bert_seq2seq import BertEncoderModel, BertDecoderModel, BertOutputLayer, BertConfig
-from lm import LM
-from textprocessor import TextProcessor
+from ImageTranslate import lm_config
+from ImageTranslate.bert_seq2seq import BertEncoderModel, BertDecoderModel, BertOutputLayer, BertConfig
+from ImageTranslate.lm import LM
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def future_mask(tgt_mask):

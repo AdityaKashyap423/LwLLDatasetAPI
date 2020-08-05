@@ -6,7 +6,7 @@ import torch
 import torch.optim as optim
 from torch.nn.utils.rnn import pad_sequence
 
-from textprocessor import TextProcessor
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def build_optimizer(model, learning_rate, warump_steps):

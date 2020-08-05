@@ -1,6 +1,6 @@
 from optparse import OptionParser
 
-from textprocessor import TextProcessor
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def write(text_processor: TextProcessor, output_file: str, txt_file: str, output_txt: bool = False):

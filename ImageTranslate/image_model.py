@@ -2,8 +2,8 @@ import torch.nn.functional as F
 from torchvision import models
 from transformers.modeling_albert import *
 
-from mass_seq2seq import MassSeq2Seq, future_mask
-from textprocessor import TextProcessor
+from ImageTranslate.mass_seq2seq import MassSeq2Seq, future_mask
+from ImageTranslate.textprocessor import TextProcessor
 
 
 class ModifiedResnet(models.ResNet):

@@ -7,11 +7,9 @@ import numpy as np
 import pandas as pd
 import requests
 
-import create_mt_batches
-import train_image_mt
-import translate
-from mt_options import TrainOptions, TranslateOptions
-from textprocessor import TextProcessor
+from ImageTranslate import train_image_mt, translate, create_mt_batches
+from ImageTranslate.mt_options import TrainOptions, TranslateOptions
+from ImageTranslate.textprocessor import TextProcessor
 
 url = 'https://api-dev.lollllz.com'
 data_type = 'full'

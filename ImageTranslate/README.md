@@ -6,7 +6,7 @@ Here is a simple example for running the docker:
 
 * Build the docker in command line:
 ```bash
-docker build ~/Projects/LwLLDatasetAPI/dockers/cpu/ -t ady
+docker build ~/Projects/LwLLDatasetAPI/dockers/cpu/ -t ady --no-cache
 ```
 
 * Start the docker
