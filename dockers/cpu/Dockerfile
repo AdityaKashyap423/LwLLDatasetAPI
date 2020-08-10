@@ -9,7 +9,8 @@ RUN apt update && \
                    curl \
                    ca-certificates \
                    python3 \
-                   python3-pip && \
+                   python3-pip \
+                   vim && \
     rm -rf /var/lib/apt/lists
 
 RUN python3 -m pip install --no-cache-dir --upgrade pip
