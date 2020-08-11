@@ -35,6 +35,7 @@ RUN mkdir /lwll/development/ted_talks
 RUN mkdir /lwll/models
 ENV DATA_FOLDER=/lwll/development
 ENV SAVE_PATH=/lwll/models
+ENV LANG C.UTF-8
 RUN echo 'alias python="python3"' >> ~/.bashrc
 
 RUN cd /lwll

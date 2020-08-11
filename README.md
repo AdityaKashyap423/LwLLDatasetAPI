@@ -16,8 +16,8 @@ docker run -it  ady
 Then we can run the following command for the first checkpoint
 ```bash
 git clone https://gitlab.lollllz.com/lwll/dataset_prep.git
-python dataset_prep/download.py download_data --dataset global_voices --stage development --output /lwll/ --overwrite True
-python dataset_prep/download.py download_data --dataset ted_talks --stage development --output /lwll/ --overwrite True
+python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
+python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 python3 -u LwLLDataAPI.py --secret $SECRET_KEY --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH --enc 1 --dec 1 --embed 96 --iter 1 --beam 1
 ```
 
