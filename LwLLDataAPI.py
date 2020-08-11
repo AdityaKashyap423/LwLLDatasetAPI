@@ -213,7 +213,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
     metadata['checkpoint_number'] = checkpoint_number
 
     all_data["metadata"] = metadata
-    tok_path = os.path.dirname(os.path.realpath(__file__)) + "/tok"
+    tok_path = os.path.dirname(os.path.realpath(__file__)) + "/ImageTranslate/tok"
 
     if data_type == "train":
         np.save(os.path.join(save_path, "metadata.npy"), all_data)
