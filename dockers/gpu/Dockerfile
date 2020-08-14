@@ -28,7 +28,11 @@ RUN python3 -m pip install fire
 RUN python3 -m pip install boto3
 RUN python3 -m pip install apex
 
-RUN echo "Installing Apex"
+# Base image must at least have pytorch and CUDA installed.
+ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:19.07-py3
+FROM $BASE_IMAGE
+ARG BASE_IMAGE
+RUN echo "Installing Apex on top of ${BASE_IMAGE}"
 # make sure we don't overwrite some existing directory called "apex"
 WORKDIR /tmp/unique_for_apex
 # uninstall Apex if present, twice to make absolutely sure :)
