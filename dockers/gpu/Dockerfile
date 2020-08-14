@@ -28,15 +28,6 @@ RUN python3 -m pip install fire
 RUN python3 -m pip install boto3
 #RUN python3 -m pip install apex
 
-# make sure we don't overwrite some existing directory called "apex"
-WORKDIR /tmp/unique_for_apex
-
-# SHA is something the user can touch to force recreation of this Docker layer,
-# and therefore force cloning of the latest version of Apex
-RUN SHA=ToUcHMe git clone https://github.com/NVIDIA/apex.git
-WORKDIR /tmp/unique_for_apex/apex
-RUN python3 -m pip  install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" .
-
 WORKDIR /lwll
 RUN cd /lwll
 RUN mkdir /lwll/development
