@@ -28,6 +28,7 @@ RUN python3 -m pip install fire
 RUN python3 -m pip install boto3
 
 WORKDIR /lwll
+COPY ~/dataset_prep /lwll/
 RUN cd /lwll
 RUN mkdir /lwll/development
 RUN mkdir /lwll/development/global_voices
