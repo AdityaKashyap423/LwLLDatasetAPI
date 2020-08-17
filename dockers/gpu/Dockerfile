@@ -43,5 +43,6 @@ RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 
 WORKDIR /lwll/LwLLDatasetAPI/
+COPY dataset_prep /lwll/LwLLDatasetAPI/dataset_prep
 
 CMD ["/bin/bash"]
