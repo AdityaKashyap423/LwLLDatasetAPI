@@ -27,7 +27,6 @@ RUN python3 -m pip install pyarrow
 RUN python3 -m pip install fire
 RUN python3 -m pip install boto3
 
-COPY dataset_prep /lwll/
 WORKDIR /lwll
 RUN cd /lwll
 RUN mkdir /lwll/development
@@ -43,5 +42,7 @@ RUN cd /lwll
 RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 
 WORKDIR /lwll/LwLLDatasetAPI/
+
+COPY dataset_prep /lwll/LwLLDatasetAPI/dataset_prep
 
 CMD ["/bin/bash"]
