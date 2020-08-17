@@ -4,6 +4,14 @@
 
 Here is a simple example for running the docker:
 
+* Download the repository
+```
+https://github.com/AdityaKashyap423/LwLLDatasetAPI
+cd LwLLDatasetAPI/dockers/cpu/
+git clone https://gitlab.lollllz.com/lwll/dataset_prep.git
+```
+
+
 * Build the docker in command line:
 ```bash
 docker build dockers/cpu/ -t ady --no-cache
@@ -15,9 +23,9 @@ docker run -it  ady
 ```
 Then we can run the following command for the first checkpoint
 ```bash
-git clone https://gitlab.lollllz.com/lwll/dataset_prep.git
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
+export SECRET_KEY= [PUT your secret key here!]
 python3 -u LwLLDataAPI.py --secret $SECRET_KEY --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH --enc 1 --dec 1 --embed 96 --iter 1 --beam 1
 ```
 
