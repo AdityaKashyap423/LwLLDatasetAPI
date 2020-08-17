@@ -27,8 +27,8 @@ RUN python3 -m pip install pyarrow
 RUN python3 -m pip install fire
 RUN python3 -m pip install boto3
 
+COPY /home/ubuntu/dataset_prep /lwll/
 WORKDIR /lwll
-COPY ~/dataset_prep /lwll/
 RUN cd /lwll
 RUN mkdir /lwll/development
 RUN mkdir /lwll/development/global_voices
