@@ -31,12 +31,17 @@ docker build dockers/cpu/ -t ady --no-cache
 ```bash
 docker run --gpus all -it  ady
 ```
+
 Then we can run the following command for the first checkpoint
 ```bash
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 export SECRET_KEY= [PUT your secret key here!]
 CUDA_VISIBLE_DEVICES=0 python3 -u LwLLDataAPI.py --secret $SECRET_KEY --mode new --data_folder $DATA_FOLDER --save_path $SAVE_PATH 
+```
+Then for other checkpoints, we should run the following command (15 times)
+```
+CUDA_VISIBLE_DEVICES=0 python3 -u LwLLDataAPI.py --secret $SECRET_KEY --mode continue --data_folder $DATA_FOLDER --save_path $SAVE_PATH 
 ```
 
 ## Details

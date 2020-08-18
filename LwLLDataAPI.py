@@ -27,6 +27,8 @@ def get_command_line_arguments():
     parser.add_argument('--embed', '-embed', type=int, default=768)
     parser.add_argument('--iter', '-iter', type=int, default=100000)
     parser.add_argument('--beam', '-beam', type=int, default=5)
+    parser.add_argument('--batch', '-batch', type=int, default=60000)
+    parser.add_argument('--capacity', '-capacity', type=int, default=1500)
     args = vars(parser.parse_args())
     global secret
 
