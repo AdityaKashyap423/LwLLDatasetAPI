@@ -45,13 +45,14 @@ RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 WORKDIR /lwll/LwLLDatasetAPI/
 COPY dataset_prep /lwll/LwLLDatasetAPI/dataset_prep
 
+WORKDIR /lwll/
 # uninstall Apex if present, twice to make absolutely sure :)
-RUN pip uninstall -y apex || :
-RUN pip uninstall -y apex || :
+RUN python3 -m pip uninstall -y apex || :
+RUN python3 -m pip uninstall -y apex || :
 # SHA is something the user can touch to force recreation of this Docker layer,
 # and therefore force cloning of the latest version of Apex
 RUN SHA=ToUcHMe git clone https://github.com/NVIDIA/apex.git
-WORKDIR /tmp/unique_for_apex/apex
+WORKDIR /lwll/apex/
 RUN pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" .
 
 WORKDIR /lwll/LwLLDatasetAPI/
