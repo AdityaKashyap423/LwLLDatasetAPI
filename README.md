@@ -17,7 +17,7 @@ sudo systemctl restart docker
 * Download the repository
 ```
 https://github.com/AdityaKashyap423/LwLLDatasetAPI
-cd LwLLDatasetAPI/dockers/cpu/
+cd LwLLDatasetAPI/dockers/gpu/
 git clone https://gitlab.lollllz.com/lwll/dataset_prep.git
 ```
 
