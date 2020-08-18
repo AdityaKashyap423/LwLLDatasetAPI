@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
+FROM pytorch/pytorch:1.4.0-cuda10.1-cudnn7-runtime-ubuntu18.04
 LABEL maintainer="Mohammad Sadegh Rasooli"
 LABEL repository="lwll_mt"
 
