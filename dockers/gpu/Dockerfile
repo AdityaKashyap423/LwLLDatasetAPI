@@ -51,6 +51,7 @@ RUN python3 -m pip uninstall -y apex || :
 RUN python3 -m pip uninstall -y apex || :
 # SHA is something the user can touch to force recreation of this Docker layer,
 # and therefore force cloning of the latest version of Apex
+ENV CUDA_HOME=/usr/local/cuda-10.1
 RUN SHA=ToUcHMe git clone https://github.com/NVIDIA/apex.git
 WORKDIR /lwll/apex/
 RUN pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" .
