@@ -2,7 +2,7 @@ import os
 from optparse import OptionParser
 from typing import Optional
 
-from ImageTranslate.textprocessor import TextProcessor
+from textprocessor import TextProcessor
 
 
 def get_tokenizer(train_path: Optional[str] = None,
@@ -25,7 +25,7 @@ def get_tokenizer(train_path: Optional[str] = None,
                     languages.add(sen_split[0])
                 wf.write("\n".join(spl))
                 wf.write("\n")
-                if (i + 1) % 1000000:
+                if (i + 1) % 1000000 == 0:
                     print(i + 1, "\r", end="")
     print("Writing raw text done!")
 

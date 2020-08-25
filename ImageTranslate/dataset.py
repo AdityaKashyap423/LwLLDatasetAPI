@@ -14,7 +14,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from ImageTranslate.textprocessor import TextProcessor
+from textprocessor import TextProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +72,9 @@ class TextDataset(Dataset):
 class MTDataset(Dataset):
     def __init__(self, max_batch_capacity: int, max_batch: int,
                  pad_idx: int, max_seq_len: int = 175, batch_pickle_dir: str = None,
-                 examples: List[Tuple[torch.tensor, torch.tensor, int, int]] = None, lex_dict=None):
+                 examples: List[Tuple[torch.tensor, torch.tensor, int, int]] = None, lex_dict=None, keep_pad_idx=True):
         self.lex_dict = lex_dict
+        self.keep_pad_idx = keep_pad_idx
         if examples is None:
             self.build_batches(batch_pickle_dir, max_batch_capacity, max_batch, pad_idx, max_seq_len)
         else:
@@ -90,14 +91,16 @@ class MTDataset(Dataset):
         """
         num_gpu = torch.cuda.device_count()
         with open(batch_pickle_dir, "rb") as fr:
+            print("LOADING MT BATCHES")
             examples: List[Tuple[torch.tensor, torch.tensor, int, int]] = marshal.load(fr)
             self.batch_examples(examples, max_batch, max_batch_capacity, max_seq_len, num_gpu, pad_idx)
 
     def batch_examples(self, examples, max_batch, max_batch_capacity, max_seq_len, num_gpu, pad_idx):
+        print("BUILDING MT BATCHES")
         self.batches = []
         cur_src_batch, cur_dst_batch, cur_max_src_len, cur_max_dst_len = [], [], 0, 0
         cur_src_langs, cur_dst_langs, cur_lex_cand_batch = [], [], []
-        for example in examples:
+        for ei, example in enumerate(examples):
             src = torch.LongTensor(example[0][:max_seq_len])  # trim if longer than expected!
             dst = torch.LongTensor(example[1][:max_seq_len])  # trim if longer than expected!
             cur_src_langs.append(example[2])
@@ -133,6 +136,10 @@ class MTDataset(Dataset):
                 cur_src_batch, cur_dst_batch = [cur_src_batch[-1]], [cur_dst_batch[-1]]
                 cur_src_langs, cur_dst_langs = [cur_src_langs[-1]], [cur_dst_langs[-1]]
                 cur_max_src_len, cur_max_dst_len = int(cur_src_batch[0].size(0)), int(cur_dst_batch[0].size(0))
+
+            if ei % 1000 == 0:
+                print(ei, "/", len(examples), end="\r")
+
         if len(cur_src_batch) > 0 and len(cur_src_batch) >= num_gpu:
             src_batch = pad_sequence(cur_src_batch, batch_first=True, padding_value=pad_idx)
             dst_batch = pad_sequence(cur_dst_batch, batch_first=True, padding_value=pad_idx)
@@ -145,14 +152,16 @@ class MTDataset(Dataset):
                      "dst_pad_mask": dst_pad_mask, "src_langs": torch.LongTensor(cur_src_langs),
                      "dst_langs": torch.LongTensor(cur_dst_langs), "proposal": lex_cand_batch}
             self.batches.append(entry)
-        for b in self.batches:
-            pads = b["src_pad_mask"]
-            pad_indices = [int(pads.size(1)) - 1] * int(pads.size(0))
-            pindices = torch.nonzero(~pads)
-            for (r, c) in pindices:
-                pad_indices[r] = min(pad_indices[r], int(c))
-            b["pad_idx"] = torch.LongTensor(pad_indices)
-        print("Loaded %d bitext sentences to %d batches!" % (len(examples), len(self.batches)))
+
+        if self.keep_pad_idx:
+            pad_idx_find = lambda non_zeros, sz: (sz - 1) if int(non_zeros.size(0)) == 0 else non_zeros[0]
+            for b in self.batches:
+                pads = b["src_texts"] == pad_idx
+                sz = int(pads.size(1))
+                pad_indices = torch.LongTensor(list(map(lambda p: pad_idx_find(torch.nonzero(p), sz), pads)))
+                b["pad_idx"] = pad_indices
+
+        print("\nLoaded %d bitext sentences to %d batches!" % (len(examples), len(self.batches)))
 
     def __len__(self):
         return len(self.batches)
@@ -164,8 +173,9 @@ class MTDataset(Dataset):
 class MassDataset(Dataset):
     def __init__(self, batch_pickle_dir: str, max_batch_capacity: int, max_batch: int,
                  pad_idx: int, max_seq_len: int = 512, keep_examples: bool = False, example_list: List = None,
-                 lex_dict=None):
+                 lex_dict=None, keep_pad_idx=True):
         self.lex_dict = lex_dict
+        self.keep_pad_idx = keep_pad_idx
         if example_list is None:
             self.build_batches(batch_pickle_dir, max_batch_capacity, max_batch, pad_idx, max_seq_len, keep_examples)
         else:
@@ -240,23 +250,18 @@ class MassDataset(Dataset):
                 batches.append((cur_src_batch, cur_lex_cand_batch if self.lex_dict is not None else None))
                 langs.append(cur_langs)
 
+        pad_idx_find = lambda non_zeros, sz: (sz - 1) if int(non_zeros.size(0)) == 0 else non_zeros[0]
+        pad_indices = lambda pads: torch.LongTensor(
+            list(map(lambda p: pad_idx_find(torch.nonzero(p), int(pads.size(1))), pads)))
         padder = lambda b: pad_sequence(b, batch_first=True, padding_value=pad_idx)
         tensorfier = lambda b: list(map(torch.LongTensor, b))
         entry = lambda b, l: {"src_texts": padder(tensorfier(b[0])),
                               "proposal": padder(tensorfier(b[1])) if b[1] is not None else torch.LongTensor([pad_idx]),
                               "langs": torch.LongTensor(l)}
-        pad_entry = lambda e: {"src_pad_mask": e["src_texts"] != pad_idx, "src_texts": e["src_texts"],
-                               "langs": e["langs"], "proposal": e["proposal"]}
+        pad_entry = lambda e: {"src_texts": e["src_texts"], "langs": e["langs"], "proposal": e["proposal"],
+                               "pad_idx": pad_indices(e["src_texts"] == pad_idx)}
 
         self.batches = list(map(lambda b, l: pad_entry(entry(b, l)), batches, langs))
-
-        for b in self.batches:
-            pads = b["src_pad_mask"]
-            pad_indices = [int(pads.size(1)) - 1] * int(pads.size(0))
-            pindices = torch.nonzero(~pads)
-            for (r, c) in pindices:
-                pad_indices[r] = min(pad_indices[r], int(c))
-            b["pad_idx"] = torch.LongTensor(pad_indices)
 
         print("Loaded %d MASS batches!" % (len(self.batches)))
         print("Number of languages", len(self.lang_ids))
@@ -284,10 +289,8 @@ class ImageCaptionDataset(Dataset):
         self.batches = []
         self.root_img_dir = root_img_dir
         max_capacity *= 1000000
-        self.image_cache = {}
         self.image_batches = []
         self.lang_ids = set()
-        self.image_queue = []
         num_gpu = torch.cuda.device_count()
         self.all_captions = []
 
@@ -301,6 +304,8 @@ class ImageCaptionDataset(Dataset):
             self.lang = text_processor.languages[lang_id] if lang_id in text_processor.languages else 0
             for caption_info in captions:
                 image_id, caption = caption_info
+                if self.unique_images[image_id].lower().endswith(".png"):
+                    continue
                 caption = torch.LongTensor(caption)
                 cur_batch.append(caption)
                 self.all_captions.append(caption)
@@ -369,19 +374,6 @@ class ImageCaptionDataset(Dataset):
     def __getitem__(self, item):
         batch, caption_mask, pad_indices, lex_cand_batch = self.batches[item]
         image_batch = list(map(lambda image_id: self.get_img(self.unique_images[image_id]), self.image_batches[item]))
-        # image_batch = []
-        # for image_id in self.image_batches[item]:
-        #     image_path = self.unique_images[image_id]
-        # if image_id not in self.image_cache:
-        #     if len(self.image_cache) >= 30000:
-        #         k = self.image_queue.pop(0)
-        #         del self.image_cache[k]
-        #     image_path = self.unique_images[image_id]
-        #
-        #     self.image_cache[image_id] = img
-        #     self.image_queue.append(image_id)
-        # image_batch.append(self.image_cache[image_id])
-        # image_batch.append(img)
 
         # We choose fixed negative samples for all batch items.
         img_tensors = torch.stack(list(map(lambda im: self.img_normalize(self.to_tensor(im)), image_batch)))
@@ -392,6 +384,59 @@ class ImageCaptionDataset(Dataset):
         return {"images": img_tensors, "captions": batch, "pad_idx": pad_indices, "neg": neg_samples,
                 "langs": torch.LongTensor([self.lang] * len(batch)), "caption_mask": caption_mask, "neg_mask": neg_mask,
                 "proposal": lex_cand_batch}
+
+
+class ImageDataset(Dataset):
+    def __init__(self, root_img_dir: str, max_img_per_batch: int, target_lang: int, first_token: int):
+        self.target_lang = target_lang
+        self.first_token = first_token
+        self.size_transform = transforms.Resize(256)
+        self.crop = transforms.CenterCrop(224)
+        self.to_tensor = transforms.ToTensor()
+        self.img_normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
+        self.image_batches = []
+        print("Start", datetime.datetime.now())
+        cur_imgs = []
+
+        image_dir = os.listdir(root_img_dir)
+        for img_path in image_dir:
+            if img_path.lower().endswith(".png"):
+                continue
+            cur_imgs.append(os.path.join(root_img_dir, img_path))
+            if len(cur_imgs) >= max_img_per_batch:
+                self.image_batches.append(cur_imgs)
+                cur_imgs = []
+        if len(cur_imgs) > 0:
+            self.image_batches.append(cur_imgs)
+
+        print("Loaded %d image batches of %d unique images!" % (len(self.image_batches), len(image_dir)))
+        print("End", datetime.datetime.now())
+
+    def __len__(self):
+        return len(self.image_batches)
+
+    def get_img(self, path):
+        try:
+            with Image.open(path) as im:
+                # make sure not to deal with rgba or grayscale images.
+                img = im.convert("RGB")
+                img = self.crop(self.size_transform(img))
+                im.close()
+        except:
+            print("Corrupted image", path)
+            img = Image.new('RGB', (224, 224))
+        return img
+
+    def __getitem__(self, item):
+        image_batch = list(map(lambda path: self.get_img(path), self.image_batches[item]))
+        first_tokens = torch.LongTensor([self.first_token] * len(image_batch))
+        target_lang = torch.LongTensor([self.target_lang] * len(image_batch))
+        img_tensors = torch.stack(list(map(lambda im: self.img_normalize(self.to_tensor(im)), image_batch)))
+        return {"images": img_tensors, "tgt_langs": target_lang, "first_tokens": first_tokens,
+                "paths": self.image_batches[item]}
 
 
 class TextCollator(object):

@@ -6,10 +6,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ImageTranslate import lm_config
-from ImageTranslate.bert_seq2seq import BertEncoderModel, BertDecoderModel, BertOutputLayer, BertConfig
-from ImageTranslate.lm import LM
-from ImageTranslate.textprocessor import TextProcessor
+import lm_config
+from bert_seq2seq import BertEncoderModel, BertDecoderModel, BertOutputLayer, BertConfig
+from lm import LM
+from textprocessor import TextProcessor
 
 
 def future_mask(tgt_mask):
@@ -20,9 +20,9 @@ def future_mask(tgt_mask):
 
 class Seq2Seq(nn.Module):
     def __init__(self, text_processor: TextProcessor, lang_dec: bool = True, use_proposals=False, tie_embed=False,
-                 enc_layer: int = 6, dec_layer: int = 3, embed_dim: int = 768, intermediate_dim: int = 3072):
+                 enc_layer: int = 6, dec_layer: int = 3, embed_dim: int = 768, intermediate_dim: int = 3072,
+                 freeze_image: bool = False, resnet_depth: int = 1):
         super(Seq2Seq, self).__init__()
-
         self.text_processor: TextProcessor = text_processor
         self.config = lm_config.get_config(vocab_size=text_processor.tokenizer.get_vocab_size(),
                                            pad_token_id=text_processor.pad_token_id(),
@@ -44,8 +44,8 @@ class Seq2Seq(nn.Module):
         self.lang_dec = lang_dec
         self.tie_embed = tie_embed
         if not lang_dec:
-            self.output_layer = BertOutputLayer(dec_config)
             self.decoder = BertDecoderModel(dec_config)
+            self.output_layer = BertOutputLayer(dec_config)
             if tie_embed:
                 self.encoder._tie_or_clone_weights(self.output_layer, self.encoder.embeddings.word_embeddings)
                 self.encoder._tie_or_clone_weights(self.encoder.embeddings.position_embeddings,
@@ -70,6 +70,9 @@ class Seq2Seq(nn.Module):
             self.proposal_embedding = self.encoder.embeddings.word_embeddings
             self.lexical_gate = nn.Parameter(torch.zeros(1, self.config.hidden_size).fill_(0.1), requires_grad=True)
             self.lexical_layer_norm = nn.LayerNorm(self.config.hidden_size, eps=self.config.layer_norm_eps)
+
+        self.freeze_image = freeze_image
+        self.resnet_depth = resnet_depth
 
     def init_from_lm(self, lm: LM):
         self.encoder = lm.encoder
@@ -172,24 +175,26 @@ class Seq2Seq(nn.Module):
         with open(os.path.join(out_dir, "mt_config"), "wb") as fp:
             pickle.dump(
                 (self.lang_dec, self.use_proposals, self.enc_layer, self.dec_layer, self.embed_dim,
-                 self.intermediate_dim, self.tie_embed), fp)
+                 self.intermediate_dim, self.tie_embed, self.resnet_depth, self.freeze_image), fp)
         try:
             torch.save(self.state_dict(), os.path.join(out_dir, "mt_model.state_dict"))
         except:
             torch.cuda.empty_cache()
             torch.save(self.state_dict(), os.path.join(out_dir, "mt_model.state_dict"))
+        finally:
+            torch.cuda.empty_cache()
 
     @staticmethod
     def load(cls, out_dir: str, tok_dir: str):
         text_processor = TextProcessor(tok_model_path=tok_dir)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         with open(os.path.join(out_dir, "mt_config"), "rb") as fp:
-            lang_dec, use_proposals, enc_layer, dec_layer, embed_dim, intermediate_dim, tie_embed = pickle.load(fp)
+            lang_dec, use_proposals, enc_layer, dec_layer, embed_dim, intermediate_dim, tie_embed, resnet_depth, freeze_image = pickle.load(
+                fp)
 
-            mt_model = Seq2Seq(text_processor=text_processor, lang_dec=lang_dec, use_proposals=use_proposals,
-                               tie_embed=tie_embed, enc_layer=enc_layer, dec_layer=dec_layer, embed_dim=embed_dim,
-                               intermediate_dim=intermediate_dim)
+            mt_model = cls(text_processor=text_processor, lang_dec=lang_dec, use_proposals=use_proposals,
+                           tie_embed=tie_embed, enc_layer=enc_layer, dec_layer=dec_layer, embed_dim=embed_dim,
+                           intermediate_dim=intermediate_dim, freeze_image=freeze_image, resnet_depth=resnet_depth)
             mt_model.load_state_dict(torch.load(os.path.join(out_dir, "mt_model.state_dict"), map_location=device),
                                      strict=False)
-            mt_model.__class__ = cls
             return mt_model

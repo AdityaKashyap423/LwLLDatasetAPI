@@ -1,24 +1,29 @@
+import pickle
+
 import torch.nn.functional as F
 from torchvision import models
 from transformers.modeling_albert import *
 
-from ImageTranslate.mass_seq2seq import MassSeq2Seq, future_mask
-from ImageTranslate.textprocessor import TextProcessor
+import lm_config
+from bert_seq2seq import BertEncoderModel, BertConfig
+from mass_seq2seq import MassSeq2Seq, future_mask
+from seq2seq import Seq2Seq
+from textprocessor import TextProcessor
 
 
 class ModifiedResnet(models.ResNet):
     def _forward_impl(self, x):
         input = x
-        x = self.conv1(input)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x1 = self.conv1(input)
+        x2 = self.bn1(x1)
+        x3 = self.relu(x2)
+        x4 = self.maxpool(x3)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        grid_hidden = self.layer4(x)
-        grid_hidden = grid_hidden.view(grid_hidden.size(0), grid_hidden.size(1), -1)
+        x5 = self.layer1(x4)
+        x6 = self.layer2(x5)
+        x7 = self.layer3(x6)
+        x8 = self.layer4(x7)
+        grid_hidden = x8.view(x8.size(0), x8.size(1), -1)
         grid_hidden = grid_hidden.permute((0, 2, 1))
         if self.dropout > 0:
             grid_hidden = F.dropout(grid_hidden, p=self.dropout)
@@ -69,7 +74,8 @@ class ImageMassSeq2Seq(MassSeq2Seq):
         super(ImageMassSeq2Seq, self).__init__(text_processor=text_processor, tie_embed=tie_embed,
                                                lang_dec=lang_dec, use_proposals=use_proposals, enc_layer=enc_layer,
                                                dec_layer=dec_layer, embed_dim=embed_dim,
-                                               intermediate_dim=intermediate_dim)
+                                               intermediate_dim=intermediate_dim, freeze_image=freeze_image,
+                                               resnet_depth=resnet_depth)
         self.image_model: ModifiedResnet = init_net(embed_dim=self.config.hidden_size,
                                                     dropout=self.config.hidden_dropout_prob,
                                                     freeze=freeze_image, depth=resnet_depth)
@@ -112,7 +118,7 @@ class ImageMassSeq2Seq(MassSeq2Seq):
             proposals = proposals[0]
 
         if batch is None:
-            return super().forward(src_inputs=src_inputs, src_pads=src_pads, tgt_inputs=tgt_inputs, src_langs=src_langs,
+            return super().forward(src_inputs=src_inputs, tgt_inputs=tgt_inputs, src_langs=src_langs,
                                    tgt_langs=tgt_langs, pad_idx=pad_idx, tgt_positions=tgt_positions,
                                    proposals=proposals,
                                    log_softmax=log_softmax)
@@ -196,3 +202,179 @@ class ImageMassSeq2Seq(MassSeq2Seq):
             nominator = torch.diagonal(cross_dot[:, :len(encoder_state_attended)], 0) + 1e-4
             log_neg = torch.sum(denom - nominator) / len(encoder_state_attended)
             return log_neg
+
+
+class ImageCaptioning(Seq2Seq):
+    def __init__(self, text_processor: TextProcessor, freeze_image: bool = False, resnet_depth: int = 1,
+                 lang_dec: bool = False, use_proposals: bool = False, tie_embed: bool = False, enc_layer: int = 6,
+                 dec_layer: int = 3, embed_dim: int = 768, intermediate_dim: int = 3072):
+        super(ImageCaptioning, self).__init__(text_processor=text_processor, tie_embed=tie_embed,
+                                              lang_dec=lang_dec, use_proposals=use_proposals, enc_layer=enc_layer,
+                                              dec_layer=dec_layer, embed_dim=embed_dim,
+                                              intermediate_dim=intermediate_dim, freeze_image=freeze_image,
+                                              resnet_depth=resnet_depth)
+        self.image_model: ModifiedResnet = init_net(embed_dim=self.config.hidden_size,
+                                                    dropout=self.config.hidden_dropout_prob,
+                                                    freeze=freeze_image, depth=resnet_depth)
+
+    def encode(self, src_inputs=None, src_mask=None, src_langs=None, images=None):
+        if images is not None:
+            device = self.encoder.embeddings.word_embeddings.weight.device
+            if isinstance(images, list):
+                images = images[0]
+            if images.device != device:
+                images = images.to(device)
+            image_embeddings = self.image_model(images)
+            return image_embeddings
+        else:
+            encoder_states = super().encode(src_inputs, src_mask, src_langs)
+            return encoder_states
+
+    def forward(self, src_inputs=None, src_pads=None, tgt_inputs=None, src_langs=None, tgt_langs=None, tgt_mask=None,
+                pad_idx: int = 0, tgt_positions=None, batch=None, proposals=None, log_softmax: bool = False,
+                encode_only: bool = False, **kwargs):
+        device = self.encoder.embeddings.word_embeddings.weight.device
+        if isinstance(batch, list):
+            assert len(batch) == 1
+            batch = batch[0]
+        if isinstance(src_langs, list):
+            src_langs = src_langs[0]
+        if isinstance(src_pads, list):
+            src_pads = src_pads[0]
+        if isinstance(src_inputs, list):
+            src_inputs = src_inputs[0]
+        if isinstance(tgt_positions, list):
+            tgt_positions = tgt_positions[0]
+        if isinstance(tgt_inputs, list):
+            tgt_inputs = tgt_inputs[0]
+        if isinstance(proposals, list):
+            proposals = proposals[0]
+        if isinstance(tgt_mask, list):
+            tgt_mask = tgt_mask[0]
+
+        if batch is None:
+            return super().forward(src_inputs=src_inputs, src_mask=src_pads, tgt_inputs=tgt_inputs, src_langs=src_langs,
+                                   tgt_langs=tgt_langs, proposals=proposals, log_softmax=log_softmax)
+
+        images = batch["images"].to(device)
+        image_embeddings = self.encode(images=images)
+        if encode_only:
+            return image_embeddings
+
+        assert tgt_inputs is not None
+        tgt_inputs = tgt_inputs.to(device)
+        tgt_mask = tgt_mask.to(device)
+
+        batch_lang = int(src_langs[0])
+
+        decoder = self.decoder if not self.lang_dec else self.decoder[batch_lang]
+        output_layer = self.output_layer if not self.lang_dec else self.output_layer[batch_lang]
+        tgt_langs = src_langs.unsqueeze(-1).expand(-1, tgt_inputs.size(-1)).to(device)
+        if tgt_positions is not None:
+            tgt_positions = tgt_positions[:, :-1].to(device)
+
+        subseq_mask = future_mask(tgt_mask[:, :-1])
+
+        decoder_output = decoder(encoder_states=image_embeddings, input_ids=tgt_inputs[:, :-1],
+                                 encoder_attention_mask=src_pads,
+                                 tgt_attention_mask=subseq_mask,
+                                 position_ids=tgt_positions,
+                                 token_type_ids=tgt_langs[:, :-1])
+
+        if self.use_proposals:
+            decoder_output = self.attend_proposal(decoder_output, proposals, pad_idx)
+
+        diag_outputs_flat = decoder_output.view(-1, decoder_output.size(-1))
+        tgt_non_mask_flat = tgt_mask[:, 1:].contiguous().view(-1)
+        non_padded_outputs = diag_outputs_flat[tgt_non_mask_flat]
+        outputs = output_layer(non_padded_outputs)
+        if log_softmax:
+            outputs = F.log_softmax(outputs, dim=-1)
+        return outputs
+
+
+class Caption2Image(nn.Module):
+    def __init__(self, text_processor: TextProcessor, enc_layer: int = 6, embed_dim: int = 768,
+                 intermediate_dim: int = 3072):
+        super(Caption2Image, self).__init__()
+        self.text_processor: TextProcessor = text_processor
+        self.config = lm_config.get_config(vocab_size=text_processor.tokenizer.get_vocab_size(),
+                                           pad_token_id=text_processor.pad_token_id(),
+                                           bos_token_id=text_processor.bos_token_id(),
+                                           eos_token_id=text_processor.sep_token_id(),
+                                           enc_layer=enc_layer, embed_dim=embed_dim, intermediate_dim=intermediate_dim)
+
+        self.enc_layer = enc_layer
+        self.embed_dim = embed_dim
+        self.intermediate_dim = intermediate_dim
+        self.config["type_vocab_size"] = len(text_processor.languages)
+        self.config = BertConfig(**self.config)
+
+        self.encoder = BertEncoderModel(self.config)
+        self.encoder.init_weights()
+
+        self.input_attention = nn.Linear(self.config.hidden_size, 1)
+        self.decoder = nn.Linear(self.config.hidden_size, 49 * self.config.hidden_size)
+
+    def encode(self, src_inputs, src_mask, src_langs):
+        device = self.encoder.embeddings.word_embeddings.weight.device
+        if src_inputs.device != device:
+            src_inputs = src_inputs.to(device)
+            src_mask = src_mask.to(device)
+            src_langs = src_langs.to(device)
+        encoder_states = self.encoder(src_inputs, attention_mask=src_mask, token_type_ids=src_langs)
+        return (encoder_states, None)
+
+    def forward(self, src_inputs, src_mask, src_langs):
+        "Take in and process masked src and target sequences."
+        device = self.encoder.embeddings.word_embeddings.weight.device
+        if isinstance(src_langs, list):
+            src_langs = src_langs[0]
+        if isinstance(src_mask, list):
+            src_mask = src_mask[0]
+        if isinstance(src_inputs, list):
+            src_inputs = src_inputs[0]
+
+        src_langs = src_langs.unsqueeze(-1).expand(-1, src_inputs.size(-1))
+        src_inputs = src_inputs.to(device)
+        src_langs = src_langs.to(device)
+        if src_mask.device != device:
+            src_mask = src_mask.to(device)
+
+        encoder_states = self.encode(src_inputs, src_mask, src_langs)[0]
+
+        if self.training:
+            encoder_states = F.dropout(encoder_states, p=self.config.hidden_dropout_prob)
+
+        attention_scores = self.input_attention(encoder_states).squeeze(-1)
+        attention_scores.masked_fill_(~src_mask, -10000.0)
+        attention_prob = nn.Softmax(dim=1)(attention_scores)
+        sentence_embeddings = torch.einsum("bfd,bf->bd", encoder_states, attention_prob)
+
+        image_embeddings = self.decoder(sentence_embeddings)
+
+        return image_embeddings
+
+    def save(self, out_dir: str):
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        with open(os.path.join(out_dir, "mt_config"), "wb") as fp:
+            pickle.dump((self.enc_layer, self.embed_dim, self.intermediate_dim), fp)
+        try:
+            torch.save(self.state_dict(), os.path.join(out_dir, "mt_model.state_dict"))
+        except:
+            torch.cuda.empty_cache()
+            torch.save(self.state_dict(), os.path.join(out_dir, "mt_model.state_dict"))
+
+    @staticmethod
+    def load(out_dir: str, tok_dir: str):
+        text_processor = TextProcessor(tok_model_path=tok_dir)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        with open(os.path.join(out_dir, "mt_config"), "rb") as fp:
+            enc_layer, embed_dim, intermediate_dim = pickle.load(fp)
+
+            mt_model = Caption2Image(text_processor=text_processor, enc_layer=enc_layer, embed_dim=embed_dim,
+                                     intermediate_dim=intermediate_dim)
+            mt_model.load_state_dict(torch.load(os.path.join(out_dir, "mt_model.state_dict"), map_location=device),
+                                     strict=False)
+            return mt_model

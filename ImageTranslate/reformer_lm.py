@@ -8,8 +8,8 @@ import torch.nn.functional as F
 from transformers import ReformerModel, ReformerConfig, ReformerModelWithLMHead
 from transformers.modeling_reformer import ReformerOnlyLMHead
 
-from ImageTranslate.reformer_config import _small_config, _medium_config, _base_config
-from ImageTranslate.textprocessor import TextProcessor
+from reformer_config import _small_config, _medium_config, _base_config
+from textprocessor import TextProcessor
 
 
 class ReformerLM(nn.Module):
