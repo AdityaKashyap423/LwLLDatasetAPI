@@ -4,11 +4,11 @@ import unittest
 
 import torch
 
-import create_batches
-from dataset import TextDataset
-from lm import LM
-from seq2seq import Seq2Seq
-from textprocessor import TextProcessor
+from ImageTranslate import create_batches
+from ImageTranslate.dataset import TextDataset
+from ImageTranslate.lm import LM
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.textprocessor import TextProcessor
 
 
 class TestModel(unittest.TestCase):

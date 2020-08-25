@@ -2,7 +2,7 @@ import os
 from optparse import OptionParser
 from typing import Optional
 
-from textprocessor import TextProcessor
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def get_tokenizer(train_path: Optional[str] = None,

@@ -1,4 +1,7 @@
 
+*.pyc
 *.iml
 *.xml
-dockers/cpu/dataset_prep/
+*.npz
+*.JPG
+*.png

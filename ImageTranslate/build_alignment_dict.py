@@ -1,7 +1,7 @@
 from collections import defaultdict
 from optparse import OptionParser
 
-from textprocessor import TextProcessor
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def get_options():

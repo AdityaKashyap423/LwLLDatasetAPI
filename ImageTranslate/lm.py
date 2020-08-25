@@ -7,9 +7,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertModel, BertConfig
 
-import lm_config
-from bert_seq2seq import BertOutputLayer
-from textprocessor import TextProcessor
+from ImageTranslate import lm_config
+from ImageTranslate.bert_seq2seq import BertOutputLayer
+from ImageTranslate.textprocessor import TextProcessor
 
 
 class LM(nn.Module):

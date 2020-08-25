@@ -6,11 +6,11 @@ import torch.utils.data as data_utils
 from apex import amp
 from torch.nn.utils.rnn import pad_sequence
 
-import dataset
-from image_model import ImageCaptioning, Caption2Image
-from parallel import DataParallelModel
-from seq2seq import Seq2Seq
-from seq_gen import BeamDecoder, get_outputs_until_eos
+from ImageTranslate import dataset
+from ImageTranslate.image_model import ImageCaptioning, Caption2Image
+from ImageTranslate.parallel import DataParallelModel
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.seq_gen import BeamDecoder, get_outputs_until_eos
 
 
 def get_lm_option_parser():

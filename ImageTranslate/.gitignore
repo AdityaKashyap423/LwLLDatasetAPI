@@ -1,9 +1,4 @@
 
-*.xml
 *.iml
-*.pyc
-*.0
-.DS_Store
-pytorch_lamb
-tests/images
-*.npz
+*.xml
+dockers/cpu/dataset_prep/

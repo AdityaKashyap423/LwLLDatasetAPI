@@ -4,11 +4,11 @@ import torch.nn.functional as F
 from torchvision import models
 from transformers.modeling_albert import *
 
-import lm_config
-from bert_seq2seq import BertEncoderModel, BertConfig
-from mass_seq2seq import MassSeq2Seq, future_mask
-from seq2seq import Seq2Seq
-from textprocessor import TextProcessor
+from ImageTranslate import lm_config
+from ImageTranslate.bert_seq2seq import BertEncoderModel, BertConfig
+from ImageTranslate.mass_seq2seq import MassSeq2Seq, future_mask
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.textprocessor import TextProcessor
 
 
 class ModifiedResnet(models.ResNet):

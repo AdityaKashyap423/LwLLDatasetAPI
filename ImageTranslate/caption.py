@@ -5,11 +5,11 @@ import torch
 import torch.utils.data as data_utils
 from apex import amp
 
-import dataset
-from image_model import ImageCaptioning
-from parallel import DataParallelModel
-from seq2seq import Seq2Seq
-from seq_gen import BeamDecoder
+from ImageTranslate import dataset
+from ImageTranslate.image_model import ImageCaptioning
+from ImageTranslate.parallel import DataParallelModel
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.seq_gen import BeamDecoder
 
 
 def get_lm_option_parser():

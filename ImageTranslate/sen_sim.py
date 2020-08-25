@@ -4,10 +4,10 @@ import pickle
 import torch
 import torch.nn as nn
 
-import lm_config
-from bert_seq2seq import BertEncoderModel, BertConfig
-from lm import LM
-from textprocessor import TextProcessor
+from ImageTranslate import lm_config
+from ImageTranslate.bert_seq2seq import BertEncoderModel, BertConfig
+from ImageTranslate.lm import LM
+from ImageTranslate.textprocessor import TextProcessor
 
 
 class SenSim(nn.Module):

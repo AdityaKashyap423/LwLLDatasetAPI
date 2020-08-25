@@ -9,10 +9,10 @@ try:
 except:
     pass
 
-import dataset
-from parallel import DataParallelModel
-from seq2seq import Seq2Seq
-from seq_gen import BeamDecoder, get_outputs_until_eos
+from ImageTranslate import dataset
+from ImageTranslate.parallel import DataParallelModel
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.seq_gen import BeamDecoder, get_outputs_until_eos
 
 
 def get_lm_option_parser():

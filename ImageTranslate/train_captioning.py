@@ -10,15 +10,15 @@ import torch
 import torch.utils.data as data_utils
 from IPython.core import ultratb
 
-import dataset
-from image_model import ImageCaptioning
-from lm import LM
-from option_parser import get_img_options_parser
-from seq2seq import Seq2Seq
-from seq_gen import get_outputs_until_eos
-from textprocessor import TextProcessor
-from train_image_mt import ImageMTTrainer, get_lex_dict
-from utils import build_optimizer, backward
+from ImageTranslate import dataset
+from ImageTranslate.image_model import ImageCaptioning
+from ImageTranslate.lm import LM
+from ImageTranslate.option_parser import get_img_options_parser
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.seq_gen import get_outputs_until_eos
+from ImageTranslate.textprocessor import TextProcessor
+from ImageTranslate.train_image_mt import ImageMTTrainer, get_lex_dict
+from ImageTranslate.utils import build_optimizer, backward
 
 sys.excepthook = ultratb.FormattedTB(mode='Verbose', color_scheme='Linux', call_pdb=False)
 

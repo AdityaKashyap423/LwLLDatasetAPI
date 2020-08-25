@@ -2,7 +2,7 @@ import datetime
 import marshal
 from optparse import OptionParser
 
-from textprocessor import TextProcessor
+from ImageTranslate.textprocessor import TextProcessor
 
 
 def write(text_processor: TextProcessor, output_file: str, src_txt_file: str, dst_txt_file: str = None,

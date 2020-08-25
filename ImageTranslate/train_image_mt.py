@@ -19,16 +19,16 @@ except:
     pass
 from torch.nn.utils.rnn import pad_sequence
 
-import dataset
-from image_model import ImageMassSeq2Seq
-from lm import LM
-from loss import SmoothedNLLLoss
-from option_parser import get_img_options_parser
-from parallel import DataParallelModel, DataParallelCriterion
-from seq2seq import Seq2Seq
-from seq_gen import BeamDecoder, get_outputs_until_eos
-from textprocessor import TextProcessor
-from utils import build_optimizer, mass_mask, mass_unmask, backward
+from ImageTranslate import dataset
+from ImageTranslate.image_model import ImageMassSeq2Seq
+from ImageTranslate.lm import LM
+from ImageTranslate.loss import SmoothedNLLLoss
+from ImageTranslate.option_parser import get_img_options_parser
+from ImageTranslate.parallel import DataParallelModel, DataParallelCriterion
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.seq_gen import BeamDecoder, get_outputs_until_eos
+from ImageTranslate.textprocessor import TextProcessor
+from ImageTranslate.utils import build_optimizer, mass_mask, mass_unmask, backward
 
 sys.excepthook = ultratb.FormattedTB(mode='Verbose', color_scheme='Linux', call_pdb=False)
 

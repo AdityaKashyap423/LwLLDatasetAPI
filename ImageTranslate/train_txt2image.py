@@ -10,14 +10,14 @@ import torch.utils.data as data_utils
 from IPython.core import ultratb
 from apex import amp
 
-import dataset
-from image_model import ImageCaptioning, Caption2Image
-from option_parser import get_img_options_parser
-from parallel import DataParallelModel
-from seq2seq import Seq2Seq
-from textprocessor import TextProcessor
-from train_image_mt import ImageMTTrainer, get_lex_dict
-from utils import build_optimizer, backward
+from ImageTranslate import dataset
+from ImageTranslate.image_model import ImageCaptioning, Caption2Image
+from ImageTranslate.option_parser import get_img_options_parser
+from ImageTranslate.parallel import DataParallelModel
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.textprocessor import TextProcessor
+from ImageTranslate.train_image_mt import ImageMTTrainer, get_lex_dict
+from ImageTranslate.utils import build_optimizer, backward
 
 sys.excepthook = ultratb.FormattedTB(mode='Verbose', color_scheme='Linux', call_pdb=False)
 

@@ -9,13 +9,13 @@ import torch
 import torch.utils.data as data_utils
 from IPython.core import ultratb
 
-import dataset
-from option_parser import get_img_options_parser
-from sen_sim import SenSim
-from seq2seq import Seq2Seq
-from textprocessor import TextProcessor
-from train_image_mt import ImageMTTrainer
-from utils import build_optimizer, backward
+from ImageTranslate import dataset
+from ImageTranslate.option_parser import get_img_options_parser
+from ImageTranslate.sen_sim import SenSim
+from ImageTranslate.seq2seq import Seq2Seq
+from ImageTranslate.textprocessor import TextProcessor
+from ImageTranslate.train_image_mt import ImageMTTrainer
+from ImageTranslate.utils import build_optimizer, backward
 
 sys.excepthook = ultratb.FormattedTB(mode='Verbose', color_scheme='Linux', call_pdb=False)
 
