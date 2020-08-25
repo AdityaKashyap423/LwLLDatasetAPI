@@ -215,7 +215,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
     metadata['checkpoint_number'] = checkpoint_number
 
     all_data["metadata"] = metadata
-    tok_path = os.path.dirname(os.path.realpath(__file__)) + "/ImageTranslate/tok"
+    tok_path = os.path.dirname(os.path.realpath(__file__)) + "/tok"
 
     if data_type == "train":
         np.save(os.path.join(save_path, "metadata.npy"), all_data)
@@ -239,7 +239,8 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        train_options.step = int(min(args["iter"], len(eng) * 10))
+        num_iters = max(5, len(eng)/(train_options.batch) * 10)
+        train_options.step = int(min(args["iter"], num_iters))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
         train_options.tokenizer_path = tok_path
