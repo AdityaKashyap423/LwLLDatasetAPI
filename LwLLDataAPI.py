@@ -239,7 +239,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        num_iters = max(10, (len(eng) / (train_options.batch)) * 10)
+        num_iters = max(10, (len(eng) / (train_options.batch/100)) * 10)
         train_options.step = int(min(args["iter"], num_iters))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
@@ -248,7 +248,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         train_options.decoder_layer = args["dec"]
         train_options.embed_dim = args["embed"]
         train_options.beam_width = args["beam"]
-        train_image_mt.ImageDocTrainer.train(train_options)
+        train_image_mt.ImageMTTrainer.train(train_options)
         print("Training Done!")
 
 

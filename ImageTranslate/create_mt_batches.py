@@ -16,9 +16,11 @@ def write(text_processor: TextProcessor, output_file: str, src_txt_file: str, ds
         with open(src_txt_file, "r") as s_fp, open(dst_txt_file, "r") as d_fp:
             for src_line, dst_line in zip(s_fp, d_fp):
                 if len(src_line.strip()) == 0 or len(dst_line.strip()) == 0: continue
-                src_tok_line = text_processor.tokenize_one_sentence(src_line.strip().replace(" </s> ", " "))
+                src_line = " ".join(["<ar>", src_line.strip(), "</s>"])
+                dst_line = " ".join(["<en>", src_line.strip(), "</s>"])
+                src_tok_line = text_processor.tokenize_one_sentence(src_line.replace(" </s> ", " "))
                 src_lang = text_processor.languages[text_processor.id2token(src_tok_line[0])]
-                dst_tok_line = text_processor.tokenize_one_sentence(dst_line.strip().replace(" </s> ", " "))
+                dst_tok_line = text_processor.tokenize_one_sentence(dst_line.replace(" </s> ", " "))
                 dst_lang = text_processor.languages[text_processor.id2token(dst_tok_line[0])]
 
                 if min_len <= len(src_tok_line) <= max_len and min_len <= len(dst_tok_line) <= max_len:
@@ -26,10 +28,7 @@ def write(text_processor: TextProcessor, output_file: str, src_txt_file: str, ds
                     lens[line_num] = len(dst_tok_line)
                     line_num += 1
 
-                if line_num % 1000 == 0:
-                    print(line_num, end="\r")
-
-        print("\nSorting")
+        print("Sorting")
         sorted_lens = sorted(lens.items(), key=lambda item: item[1])
         sorted_examples = []
         print("Sorted examples")

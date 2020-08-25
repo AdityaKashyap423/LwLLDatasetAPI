@@ -302,9 +302,9 @@ class ImageMTTrainer:
                                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
                                 print("BLEU:", bleu)
 
-                            model.save(saving_path + ".latest")
+                            model.save(saving_path )
                             if save_opt:
-                                with open(os.path.join(saving_path + ".latest", "optim"), "wb") as fp:
+                                with open(os.path.join(saving_path , "optim"), "wb") as fp:
                                     pickle.dump(self.optimizer, fp)
 
                         start, tokens, cur_loss = time.time(), 0, 0
@@ -324,7 +324,7 @@ class ImageMTTrainer:
 
         try:
             print("Total loss in this epoch: %f" % (total_loss / total_tokens))
-            model.save(saving_path + ".latest")
+            model.save(saving_path )
 
             if mt_dev_iter is not None:
                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
@@ -479,7 +479,7 @@ class ImageMTTrainer:
             step = trainer.train_epoch(img_data_iter=img_train_loader, mass_data_iter=mass_train_loader,
                                        mt_train_iter=mt_train_loader, max_step=options.step, lex_dict=lex_dict,
                                        mt_dev_iter=mt_dev_loader, saving_path=options.model_path, step=step,
-                                       save_opt=options.save_opt)
+                                       save_opt=False)
             train_epoch += 1
 
         finetune_epoch = 0
