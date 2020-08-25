@@ -7,6 +7,8 @@ RUN apt update && \
                    build-essential \
                    git \
                    curl \
+                   wget \
+                   tar \
                    ca-certificates \
                    python3 \
                    python3-pip \
@@ -44,5 +46,6 @@ RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 WORKDIR /lwll/LwLLDatasetAPI/
 
 COPY dataset_prep /lwll/LwLLDatasetAPI/dataset_prep
+COPY mt_pret /lwll/LwLLDatasetAPI/mt_pret
 
 CMD ["/bin/bash"]

@@ -44,6 +44,7 @@ RUN git clone https://github.com/AdityaKashyap423/LwLLDatasetAPI
 
 WORKDIR /lwll/LwLLDatasetAPI/
 COPY dataset_prep /lwll/LwLLDatasetAPI/dataset_prep
+COPY mt_pret /lwll/LwLLDatasetAPI/mt_pret
 
 WORKDIR /lwll/
 # uninstall Apex if present, twice to make absolutely sure :)

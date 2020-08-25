@@ -19,6 +19,9 @@ sudo systemctl restart docker
 https://github.com/AdityaKashyap423/LwLLDatasetAPI
 cd LwLLDatasetAPI/dockers/gpu/
 git clone https://gitlab.lollllz.com/lwll/dataset_prep.git
+wget https://www.seas.upenn.edu/~rasooli/mt_pret.zip
+unzip mt_pret.zip
+cd LwLLDatasetAPI
 ```
 
 
