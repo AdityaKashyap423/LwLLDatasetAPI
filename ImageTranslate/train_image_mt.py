@@ -13,7 +13,10 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
 from IPython.core import ultratb
-from apex import amp
+try:
+    from apex import amp
+except:
+    pass
 from torch.nn.utils.rnn import pad_sequence
 
 import dataset

@@ -3,7 +3,11 @@ from optparse import OptionParser
 
 import torch
 import torch.utils.data as data_utils
-from apex import amp
+
+try:
+    from apex import amp
+except:
+    pass
 
 import dataset
 from parallel import DataParallelModel
