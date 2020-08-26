@@ -7,3 +7,4 @@
 *.png
 *.zip
 *.zip
+*.state_dict
