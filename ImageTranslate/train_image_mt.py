@@ -414,6 +414,7 @@ class ImageMTTrainer:
         num_processors = max(torch.cuda.device_count(), 1)
 
         if options.pretrained_path is not None:
+            print("Loading pretrained path", options.pretrained_path)
             mt_model = Seq2Seq.load(ImageMassSeq2Seq, options.pretrained_path, tok_dir=options.tokenizer_path)
         else:
             mt_model = ImageMassSeq2Seq(use_proposals=lex_dict is not None, tie_embed=options.tie_embed,
