@@ -17,7 +17,7 @@ def write(text_processor: TextProcessor, output_file: str, src_txt_file: str, ds
             for src_line, dst_line in zip(s_fp, d_fp):
                 if len(src_line.strip()) == 0 or len(dst_line.strip()) == 0: continue
                 src_line = " ".join(["<ar>", src_line.strip(), "</s>"])
-                dst_line = " ".join(["<en>", src_line.strip(), "</s>"])
+                dst_line = " ".join(["<en>", dst_line.strip(), "</s>"])
                 src_tok_line = text_processor.tokenize_one_sentence(src_line.replace(" </s> ", " "))
                 src_lang = text_processor.languages[text_processor.id2token(src_tok_line[0])]
                 dst_tok_line = text_processor.tokenize_one_sentence(dst_line.replace(" </s> ", " "))
