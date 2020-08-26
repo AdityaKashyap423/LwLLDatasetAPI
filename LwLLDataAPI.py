@@ -19,7 +19,6 @@ task_id = '06023f86-a66b-4b2c-8b8b-951f5edd0f22'  # For machine translation
 def get_command_line_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--secret', '-secret', required=True)
-    parser.add_argument('--mode', '-mode', required=True)
     parser.add_argument('--data_folder', '-data_folder')
     parser.add_argument('--save_path', '-save_path')
     parser.add_argument('--enc', '-enc', type=int, default=6)
@@ -33,11 +32,10 @@ def get_command_line_arguments():
     global secret
 
     secret = args["secret"]
-    mode = args["mode"]
     data_path = args["data_folder"]
     save_path = args["save_path"]
-    if (mode == "new" or mode == "continue") and (data_path is None or save_path is None):
-        print("For mode = new/continue, --data_folder and --save_path is required!")
+    if data_path is None or save_path is None:
+        print("--data_folder and --save_path is required!")
         exit(1)
 
     return args
@@ -239,7 +237,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        num_iters = max(10, (len(eng) / (train_options.batch/100)) * 10)
+        num_iters = max(10, (len(eng) / (train_options.batch / 100)) * 10)
         train_options.step = int(min(args["iter"], num_iters))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
@@ -371,26 +369,15 @@ if __name__ == '__main__':
 
     args = get_command_line_arguments()
     secret = args["secret"]
-    mode = args["mode"]
     data_folder = args["data_folder"]
     save_path = args["save_path"]
 
-    if mode == 'new':
-        training_data_new(data_folder, save_path, args)
-        submit_predictions(save_path)
+    for i in range(16):
+        print("Starting round", (i + 1), "training!")
+        if i == 0:
+            training_data_new(data_folder, save_path, args)
+            submit_predictions(save_path)
+        else:
+            training_data_continue(data_folder, save_path, args)
+            submit_predictions(save_path)
         print("Done with submitting predictions")
-
-    elif mode == 'continue':
-        training_data_continue(data_folder, save_path, args)
-        submit_predictions(save_path)
-        print("Done with submitting predictions")
-
-# for i in range(16):
-#     if i == 0:
-#         new(data_folder, save_path)
-#     else:
-#         training_data_continue(data_folder, save_path)
-
-
-#     create_random_predictions(save_path)
-#     submit_predictions(pred_path,save_path)
