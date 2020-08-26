@@ -40,10 +40,11 @@ Then we can run the following command for the first checkpoint
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 export SECRET_KEY= [PUT your secret key here!]
+export CUDA_VISIBLE_DEVICES=0
 ```
 Then run the following command
 ```
-CUDA_VISIBLE_DEVICES=0 python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH 
+nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH &> log.txt &
 ```
 
 ## Details
