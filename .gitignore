@@ -8,3 +8,5 @@
 *.zip
 *.zip
 *.state_dict
+dockers/cpu/dataset_prep/
+dockers/cpu/home1/r/rasooli/html/mt_pret/mt_config
