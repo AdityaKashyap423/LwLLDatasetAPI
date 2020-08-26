@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
 from IPython.core import ultratb
+
 try:
     from apex import amp
 except:
@@ -78,7 +79,7 @@ class ImageMTTrainer:
         self.best_bleu = -1.0
         self.mm_mode = mm_mode
 
-    def train_epoch(self, img_data_iter: List[data_utils.DataLoader]=None, step: int=10, saving_path: str = None,
+    def train_epoch(self, img_data_iter: List[data_utils.DataLoader] = None, step: int = 10, saving_path: str = None,
                     mass_data_iter: List[data_utils.DataLoader] = None, mt_dev_iter: List[data_utils.DataLoader] = None,
                     mt_train_iter: List[data_utils.DataLoader] = None, max_step: int = 300000,
                     fine_tune: bool = False, lang_directions: dict = False, lex_dict=None, save_opt: bool = False,
@@ -302,9 +303,9 @@ class ImageMTTrainer:
                                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
                                 print("BLEU:", bleu)
 
-                            model.save(saving_path )
+                            model.save(saving_path)
                             if save_opt:
-                                with open(os.path.join(saving_path , "optim"), "wb") as fp:
+                                with open(os.path.join(saving_path, "optim"), "wb") as fp:
                                     pickle.dump(self.optimizer, fp)
 
                         start, tokens, cur_loss = time.time(), 0, 0
@@ -324,7 +325,7 @@ class ImageMTTrainer:
 
         try:
             print("Total loss in this epoch: %f" % (total_loss / total_tokens))
-            model.save(saving_path )
+            model.save(saving_path)
 
             if mt_dev_iter is not None:
                 bleu = self.eval_bleu(mt_dev_iter, saving_path)
@@ -458,12 +459,11 @@ class ImageMTTrainer:
 
         step, train_epoch = 0, 1
         while options.step > 0 and step < options.step:
-            print("train epoch", train_epoch, step)
+            print("train epoch", train_epoch, "step:", step)
             step = trainer.train_epoch(mt_train_iter=mt_train_loader, max_step=options.step, lex_dict=lex_dict,
                                        mt_dev_iter=mt_dev_loader, saving_path=options.model_path, step=step,
                                        save_opt=False)
             train_epoch += 1
-
 
     @staticmethod
     def get_mt_dev_data(mt_model, options, pin_memory, text_processor, trainer, lex_dict=None):
@@ -504,8 +504,6 @@ class ImageMTTrainer:
             mtl = data_utils.DataLoader(mt_train_data, batch_size=1, shuffle=True, pin_memory=pin_memory)
             mt_train_loader.append(mtl)
         return mt_train_loader
-
-
 
 
 if __name__ == "__main__":
