@@ -374,7 +374,7 @@ if __name__ == '__main__':
     save_path = args["save_path"]
 
     for i in range(16):
-        print("\n**************\n\nStarting round", (i + 1), "training!\n**************\n")
+        print("\n**************\nStarting round", (i + 1), "training!\n**************\n")
         if i == 0:
             training_data_new(data_folder, save_path, args)
             submit_predictions(save_path)
