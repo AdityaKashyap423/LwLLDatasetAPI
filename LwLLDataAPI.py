@@ -23,6 +23,7 @@ def get_command_line_arguments():
     parser.add_argument('--save_path', '-save_path')
     parser.add_argument('--enc', '-enc', type=int, default=6)
     parser.add_argument('--dec', '-dec', type=int, default=6)
+    parser.add_argument('--checkpoint', '-checkpoint', type=int, default=1)
     parser.add_argument('--embed', '-embed', type=int, default=768)
     parser.add_argument('--iter', '-iter', type=int, default=100000)
     parser.add_argument('--beam', '-beam', type=int, default=5)
@@ -372,8 +373,9 @@ if __name__ == '__main__':
     secret = args["secret"]
     data_folder = args["data_folder"]
     save_path = args["save_path"]
+    checkpoint = args["checkpoint"] - 1
 
-    for i in range(16):
+    for i in range(checkpoint, 16):
         print("\n**************\nStarting round", (i + 1), "training!\n**************\n")
         if i == 0:
             training_data_new(data_folder, save_path, args)

@@ -38,6 +38,12 @@ export CUDA_VISIBLE_DEVICES=0
 nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH &> log.txt &
 ```
 
+6. Resume unfinished pipeline
+```
+nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH --checkpoint [checkpoint-number] &> log.txt &
+```
+checkpoint-number is by default 1. Choose value between 1 to 16.
+
 ### INSTALL DOCKER 
 * Install docker
 * Install NVIDIA-DOCKER
