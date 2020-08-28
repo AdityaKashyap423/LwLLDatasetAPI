@@ -302,7 +302,7 @@ def training_data_new(path, save_path, args):
 
 
 def training_data_continue(path, save_path, args, checkpoint_number=-1, session_token=None):
-    if session_checkpoint is None:
+    if session_token is None:
         metadata = load_previous_checkpoint_data(save_path)
         session_token = metadata['session_token']
         already_queried = metadata['already_queried']
