@@ -40,7 +40,7 @@ nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FO
 
 6. Resume unfinished pipeline
 ```
-nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH --checkpoint [checkpoint-number] &> log.txt &
+nohup nice python3 -u LwLLDataAPI.py --secret $SECRET_KEY --data_folder $DATA_FOLDER --save_path $SAVE_PATH --checkpoint [checkpoint-number] --session_token [session_token]&> log.txt &
 ```
 checkpoint-number is by default 1. Choose value between 1 to 16.
 

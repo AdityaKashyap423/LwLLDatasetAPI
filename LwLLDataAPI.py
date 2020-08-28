@@ -24,10 +24,12 @@ def get_command_line_arguments():
     parser.add_argument('--enc', '-enc', type=int, default=6)
     parser.add_argument('--dec', '-dec', type=int, default=6)
     parser.add_argument('--checkpoint', '-checkpoint', type=int, default=1)
+    parser.add_argument('--session_token', '-session_token', type=str, default=None)
     parser.add_argument('--embed', '-embed', type=int, default=768)
     parser.add_argument('--iter', '-iter', type=int, default=100000)
     parser.add_argument('--beam', '-beam', type=int, default=5)
     parser.add_argument('--batch', '-batch', type=int, default=120000)
+
     parser.add_argument('--capacity', '-capacity', type=int, default=3000)
     args = vars(parser.parse_args())
     global secret
@@ -299,12 +301,14 @@ def training_data_new(path, save_path, args):
     get_test_data(session_token, DATASETS_PATH, save_path, args)
 
 
-def training_data_continue(path, save_path, args):
-    metadata = load_previous_checkpoint_data(save_path)
-
-    session_token = metadata['session_token']
-    already_queried = metadata['already_queried']
-    checkpoint_number = metadata['checkpoint_number'] + 1
+def training_data_continue(path, save_path, args, checkpoint_number=-1, session_token=None):
+    if session_checkpoint is None:
+        metadata = load_previous_checkpoint_data(save_path)
+        session_token = metadata['session_token']
+        already_queried = metadata['already_queried']
+        checkpoint_number = metadata['checkpoint_number'] + 1
+    else:
+        already_queried = False
 
     DATASETS_PATH = Path(path)
     train_df = get_train_data_mt(DATASETS_PATH, session_token)  # 63947 training instances: id, source
@@ -374,6 +378,7 @@ if __name__ == '__main__':
     data_folder = args["data_folder"]
     save_path = args["save_path"]
     checkpoint = args["checkpoint"] - 1
+    session_checkpoint = args["session_checkpoint"]
 
     for i in range(checkpoint, 16):
         print("\n**************\nStarting round", (i + 1), "training!\n**************\n")
