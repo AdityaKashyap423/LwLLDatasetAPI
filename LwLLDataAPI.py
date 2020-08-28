@@ -378,7 +378,7 @@ if __name__ == '__main__':
     data_folder = args["data_folder"]
     save_path = args["save_path"]
     checkpoint = args["checkpoint"] - 1
-    session_checkpoint = args["session_checkpoint"]
+    session_token = args["session_token"]
 
     for i in range(checkpoint, 16):
         print("\n**************\nStarting round", (i + 1), "training!\n**************\n")
@@ -387,6 +387,6 @@ if __name__ == '__main__':
             submit_predictions(save_path)
         else:
             training_data_continue(data_folder, save_path, args, checkpoint_number=checkpoint,
-                                   session_token=session_checkpoint)
+                                   session_token=session_token)
             submit_predictions(save_path)
         print("Done with submitting predictions")
