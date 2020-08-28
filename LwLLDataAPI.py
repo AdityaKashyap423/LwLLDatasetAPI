@@ -77,6 +77,13 @@ def deactivate_session(session_token, session="all"):
             r = requests.post(f"{url}/deactivate_session", json={'session_token': session},
                               headers=headers_active_session)
 
+def reactivate_session(session_token, secret):
+    headers = {'user_secret': secret}
+
+    r = requests.post(f"{url}/activate_session", json={'session_token': session_token}, headers=headers)
+
+    print("Activated with token: ", session_token)
+
 
 def get_train_data_mt(dataset_path: Path, session_token: str) -> List[str]:
     """
@@ -301,14 +308,18 @@ def training_data_new(path, save_path, args):
     get_test_data(session_token, DATASETS_PATH, save_path, args)
 
 
-def training_data_continue(path, save_path, args, checkpoint_number=-1, session_token=None):
-    if session_token is None:
+def training_data_continue(path, save_path, args):
+    if  args["session_token"] is None:
         metadata = load_previous_checkpoint_data(save_path)
         session_token = metadata['session_token']
         already_queried = metadata['already_queried']
         checkpoint_number = metadata['checkpoint_number'] + 1
     else:
+        secret = args["secret"]
+        checkpoint_number = args["checkpoint"] - 1
+        session_token = args["session_token"]
         already_queried = False
+        reactivate_session(session_token, secret=secret)
 
     DATASETS_PATH = Path(path)
     train_df = get_train_data_mt(DATASETS_PATH, session_token)  # 63947 training instances: id, source
@@ -386,7 +397,6 @@ if __name__ == '__main__':
             training_data_new(data_folder, save_path, args)
             submit_predictions(save_path)
         else:
-            training_data_continue(data_folder, save_path, args, checkpoint_number=checkpoint,
-                                   session_token=session_token)
+            training_data_continue(data_folder, save_path, args)
             submit_predictions(save_path)
         print("Done with submitting predictions")
