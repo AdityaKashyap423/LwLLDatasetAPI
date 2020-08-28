@@ -318,7 +318,7 @@ def training_data_continue(path, save_path, args):
         secret = args["secret"]
         checkpoint_number = args["checkpoint"] - 1
         session_token = args["session_token"]
-        already_queried = False
+        already_queried = []
         reactivate_session(session_token, secret=secret)
 
     DATASETS_PATH = Path(path)
