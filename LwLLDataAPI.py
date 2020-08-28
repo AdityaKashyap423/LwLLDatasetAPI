@@ -386,6 +386,7 @@ if __name__ == '__main__':
             training_data_new(data_folder, save_path, args)
             submit_predictions(save_path)
         else:
-            training_data_continue(data_folder, save_path, args)
+            training_data_continue(data_folder, save_path, args, checkpoint_number=checkpoint,
+                                   session_token=session_checkpoint)
             submit_predictions(save_path)
         print("Done with submitting predictions")
