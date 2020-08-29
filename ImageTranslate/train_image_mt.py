@@ -458,7 +458,7 @@ class ImageMTTrainer:
                                                            lex_dict=lex_dict)
 
         step, train_epoch = 0, 1
-        while options.step > 0 and step < options.step and train_epoch <= 20:
+        while options.step > 0 and step < options.step and train_epoch <= 5:
             print("train epoch", train_epoch, "step:", step)
             step = trainer.train_epoch(mt_train_iter=mt_train_loader, max_step=options.step, lex_dict=lex_dict,
                                        mt_dev_iter=mt_dev_loader, saving_path=options.model_path, step=step,
