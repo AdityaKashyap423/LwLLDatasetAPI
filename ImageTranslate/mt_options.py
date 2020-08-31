@@ -10,7 +10,7 @@ class TrainOptions:
         self.clip = 1
         self.batch = 6000
         self.mask_prob = 0.5
-        self.learning_rate = 1e-6
+        self.learning_rate = 1e-5
         self.warmup = 4000
         self.step = 100000
         self.max_grad_norm = 1.0
