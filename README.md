@@ -21,6 +21,8 @@ docker build dockers/cpu/ -t ady --no-cache
 ```
 
 3. Start running the docker:
+
+* Run this with screen since training might take a long time.
 ```bash
 docker run --gpus all -it  ady
 ```
