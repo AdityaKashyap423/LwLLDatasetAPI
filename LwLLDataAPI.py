@@ -207,8 +207,13 @@ def df_to_dict(df):
 
 def save_to_file(data, save_path, filename):
     with open(os.path.join(save_path, filename), "w") as f:
-        f.write("\n".join(data))
-        f.write("\n")
+        for line in data:
+            if not line:
+                f.write("ERROR: NONETYPE")
+            else:
+                f.write(line)
+            f.write("\n") 
+
 
 
 def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path, args):
@@ -230,16 +235,27 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         eng = []
         ar = []
         for element in data:
-            eng.append(element["english"].replace("\r", ""))
-            ar.append(element["arabic"].replace("\r", ""))
+            if element["english"] and element["arabic"]:
+                cleaned_eng = element["english"].replace("\r", "").replace("\n"," ")
+                cleaned_ar = element["arabic"].replace("\r", "").replace("\n"," ")
+                if len(cleaned_ar) > 0 and len(cleaned_eng) > 0:
+                    eng.append(cleaned_eng)
+                    ar.append(cleaned_ar)
+
 
         if checkpoint_number != 1:
             ar_prev, eng_prev = load_training_data(save_path)
+
             ar = ar_prev + ar
             eng = eng_prev + eng
 
+        if len(ar) != len(eng):
+            exit()
+
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
+
+
         tokenizer = TextProcessor(tok_path)
 
         create_mt_batches.write(text_processor=tokenizer, output_file=os.path.join(save_path, "train.batch"),
@@ -260,7 +276,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         train_image_mt.ImageMTTrainer.train(train_options)
         print("Training Done!")
 
-
+ 
     elif data_type == "test":
         ar = []
         ID = []
@@ -341,7 +357,7 @@ def create_random_predictions(save_path):
         data_len = len(f.read().split("\n")[:-1])
 
     random_pred = ["This is a random prediction" for _ in range(data_len)]
-    with open(os.path.join(save_path, "english.test"), "w") as f:
+    with open(os.path.join(save_path, "english.test.output"), "w") as f:
         for line in random_pred:
             f.write(line)
             f.write("\n")
