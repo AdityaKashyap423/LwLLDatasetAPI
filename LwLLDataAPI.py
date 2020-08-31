@@ -249,8 +249,6 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
             ar = ar_prev + ar
             eng = eng_prev + eng
 
-        if len(ar) != len(eng):
-            exit()
 
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
