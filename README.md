@@ -27,6 +27,7 @@ docker run --gpus all -it  ady
 
 4. Run the following command for setting SECRET key, and downloading data:
 ```bash
+cp -r mt_pret $SAVE_PATH/train.model
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 export SECRET_KEY= [PUT your secret key here!]
