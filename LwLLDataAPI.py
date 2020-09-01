@@ -266,7 +266,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
         train_options.tokenizer_path = tok_path
-        train_options.pretrained_path = os.path.join(save_path, "train.model")
+        train_options.pretrained_path = os.path.dirname(os.path.realpath(__file__)) + "/mt_pret/"
         train_options.encoder_layer = args["enc"]
         train_options.decoder_layer = args["dec"]
         train_options.embed_dim = args["embed"]
