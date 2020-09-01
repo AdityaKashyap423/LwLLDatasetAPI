@@ -209,7 +209,7 @@ def save_to_file(data, save_path, filename):
     with open(os.path.join(save_path, filename), "w") as f:
         for line in data:
             if not line:
-                f.write("ERROR: NONETYPE")
+                f.write(".")
             else:
                 f.write(line)
             f.write("\n") 
