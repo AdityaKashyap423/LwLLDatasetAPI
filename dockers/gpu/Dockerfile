@@ -10,6 +10,7 @@ RUN apt update && \
                    ca-certificates \
                    python3 \
                    python3-pip \
+                   openssh-client \
                    vim && \
     rm -rf /var/lib/apt/lists
 
