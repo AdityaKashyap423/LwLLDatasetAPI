@@ -14,6 +14,7 @@ RUN apt update && \
                    vim && \
     rm -rf /var/lib/apt/lists
 
+RUN apt-get update && apt-get -y install openssh-client
 RUN python3 -m pip install --no-cache-dir --upgrade pip
 RUN python3 -m pip install torch==1.4.0
 RUN python3 -m pip install numpy==1.18.2
