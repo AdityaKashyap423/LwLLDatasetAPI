@@ -86,6 +86,7 @@ class Seq2Seq(nn.Module):
         self.freeze_image = freeze_image
         self.resnet_depth = resnet_depth
 
+
     def init_from_lm(self, lm: LM):
         self.encoder = lm.encoder
         if not self.lang_dec:
@@ -207,5 +208,6 @@ class Seq2Seq(nn.Module):
             mt_model = cls(text_processor=text_processor, lang_dec=lang_dec, use_proposals=use_proposals,
                            tie_embed=tie_embed, enc_layer=enc_layer, dec_layer=dec_layer, embed_dim=embed_dim,
                            intermediate_dim=intermediate_dim, freeze_image=freeze_image, resnet_depth=resnet_depth)
-            mt_model.load_state_dict(torch.load(os.path.join(out_dir, "mt_model.state_dict"), map_location=device))
+            mt_model.load_state_dict(torch.load(os.path.join(out_dir, "mt_model.state_dict"), map_location=device),
+                                     strict=False)
             return mt_model
