@@ -45,14 +45,26 @@ class Seq2Seq(nn.Module):
         self.tie_embed = tie_embed
         if not lang_dec:
             self.decoder = BertDecoderModel(dec_config)
-            self.output_layer = BertOutputLayer(dec_config)
+            self.encoder._tie_or_clone_weights(self.encoder.embeddings.position_embeddings,
+                                               self.decoder.embeddings.position_embeddings)
+            self.encoder._tie_or_clone_weights(self.encoder.embeddings.token_type_embeddings,
+                                               self.decoder.embeddings.token_type_embeddings)
+            self.encoder._tie_or_clone_weights(self.encoder.embeddings.word_embeddings,
+                                               self.decoder.embeddings.word_embeddings)
+
             if tie_embed:
+                self.output_layer = BertOutputLayer(dec_config)
                 self.encoder._tie_or_clone_weights(self.output_layer, self.encoder.embeddings.word_embeddings)
                 self.encoder._tie_or_clone_weights(self.encoder.embeddings.position_embeddings,
                                                    self.decoder.embeddings.position_embeddings)
-            self.decoder._tie_or_clone_weights(self.output_layer, self.decoder.embeddings.word_embeddings)
-            self.encoder._tie_or_clone_weights(self.encoder.embeddings.token_type_embeddings,
-                                               self.decoder.embeddings.token_type_embeddings)
+                self.decoder._tie_or_clone_weights(self.output_layer, self.decoder.embeddings.word_embeddings)
+            else:
+                self.output_layer = nn.ModuleList([BertOutputLayer(dec_config) for _ in text_processor.languages])
+
+            if len(self.encoder.encoder.layer) == len(self.decoder.decoder.layer):
+                for i in range(len(self.encoder.encoder.layer)):
+                    self.decoder.decoder.layer[i].attention = self.encoder.encoder.layer[i].attention
+
         else:
             dec = BertDecoderModel(dec_config)
             self.decoder = nn.ModuleList([copy.deepcopy(dec) for _ in text_processor.languages])
@@ -73,6 +85,7 @@ class Seq2Seq(nn.Module):
 
         self.freeze_image = freeze_image
         self.resnet_depth = resnet_depth
+
 
     def init_from_lm(self, lm: LM):
         self.encoder = lm.encoder
