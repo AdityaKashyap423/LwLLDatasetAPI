@@ -166,7 +166,7 @@ class Seq2Seq(nn.Module):
             subseq_mask = subseq_mask.to(device)
 
         decoder = self.decoder if not self.lang_dec else self.decoder[batch_lang]
-        output_layer = self.output_layer if not self.lang_dec else self.output_layer[batch_lang]
+        output_layer = self.output_layer if (not self.lang_dec) and self.tie_embed else self.output_layer[batch_lang]
 
         decoder_output = decoder(encoder_states=encoder_states, input_ids=tgt_inputs[:, :-1],
                                  encoder_attention_mask=src_mask, tgt_attention_mask=subseq_mask,
