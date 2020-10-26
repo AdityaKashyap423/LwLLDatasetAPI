@@ -34,6 +34,7 @@ apt install unzip
 rm -rf mt_pret*
 wget https://www.seas.upenn.edu/~rasooli/mt_pret.zip
 unzip mt_pret.zip  -d mt_pret
+rm -rf mt_pret.zip
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 export SECRET_KEY= [PUT your secret key here!]
