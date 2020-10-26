@@ -261,7 +261,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        num_iters = max(10, (len(eng) / (train_options.batch / 100)) * 50)
+        num_iters = 1   # max(10, (len(eng) / (train_options.batch / 100)) * 50)
         train_options.step = int(min(args["iter"], num_iters))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
@@ -288,7 +288,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         print("Translating ...")
         translate_options = TranslateOptions()
         translate_options.mt_train_path = os.path.join(save_path, "train.batch")
-        translate_options.model_path = os.path.join(save_path, "train.model")
+        translate_options.model_path = os.path.dirname(os.path.realpath(__file__)) + "/mt_pret/" #os.path.join(save_path, "train.model")
         translate_options.tokenizer_path = tok_path
         translate_options.input_path = os.path.join(save_path, "arabic.test")
         translate_options.output_path = os.path.join(save_path, "english.test.output")
