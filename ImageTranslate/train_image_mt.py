@@ -100,185 +100,35 @@ class ImageMTTrainer:
                 is_mass_batch = not is_img_batch and "dst_texts" not in batch
                 is_contrastive = False
                 try:
-                    if fine_tune and (is_img_batch or is_mass_batch):
-                        id2lid = lambda r: model.text_processor.languages[
-                            model.text_processor.id2token(lang_directions[int(r)])]
-                        if is_mass_batch:
-                            src_inputs = batch["src_texts"].squeeze(0)
-                            src_pad_mask = batch["src_texts"] != model.text_processor.pad_token_id()
-                            pad_indices = batch["pad_idx"].squeeze(0)
-                            proposal = batch["proposal"].squeeze(0) if lex_dict is not None else None
-                            target_langs = torch.LongTensor([lang_directions[int(l)] for l in src_inputs[:, 0]])
-                            dst_langs = torch.LongTensor([id2lid(l) for l in src_inputs[:, 0]])
-                        else:
-                            src_inputs = [b["captions"] for b in batch]
-                            src_pad_mask = [b["caption_mask"] for b in batch]
-                            pad_indices = [b["pad_idx"] for b in batch]
-                            proposal = [b["proposal"] if lex_dict is not None else None for b in batch]
-                            target_langs = [torch.LongTensor([lang_directions[int(l)] for l in src[:, 0]]) for src in
-                                            src_inputs]
-                            dst_langs = [torch.LongTensor([id2lid(l) for l in src[:, 0]]) for src in src_inputs]
-                        if len(src_inputs) < self.num_gpu:
-                            continue
 
-                        if is_mass_batch:
-                            langs = batch["langs"].squeeze(0)
-                        else:
-                            langs = [b["langs"] for b in batch]
+                    src_inputs = batch["src_texts"].squeeze(0)
+                    src_mask = batch["src_pad_mask"].squeeze(0)
+                    tgt_inputs = batch["dst_texts"].squeeze(0)
+                    tgt_mask = batch["dst_pad_mask"].squeeze(0)
+                    src_langs = batch["src_langs"].squeeze(0)
+                    dst_langs = batch["dst_langs"].squeeze(0)
+                    proposals = batch["proposal"].squeeze(0) if lex_dict is not None else None
+                    if src_inputs.size(0) < self.num_gpu:
+                        continue
+                    predictions = self.model(src_inputs=src_inputs, tgt_inputs=tgt_inputs,
+                                             src_pads=src_mask, tgt_mask=tgt_mask, src_langs=src_langs,
+                                             tgt_langs=dst_langs, proposals=proposals,
+                                             pad_idx=model.text_processor.pad_token_id(), log_softmax=True)
+                    targets = tgt_inputs[:, 1:].contiguous().view(-1)
+                    tgt_mask_flat = tgt_mask[:, 1:].contiguous().view(-1)
+                    targets = targets[tgt_mask_flat]
+                    ntokens = targets.size(0)
 
-                        model.eval()
-                        with torch.no_grad():
-                            # We do not backpropagate the data generator following the MASS paper.
-                            images = None
-                            if is_img_batch:
-                                images = [b["images"] for b in batch]
-                            outputs = self.generator(src_inputs=src_inputs,
-                                                     src_sizes=pad_indices,
-                                                     first_tokens=target_langs,
-                                                     src_langs=langs, tgt_langs=dst_langs,
-                                                     pad_idx=model.text_processor.pad_token_id(),
-                                                     src_mask=src_pad_mask, unpad_output=False, beam_width=1,
-                                                     images=images, proposals=proposal)
-                            if self.num_gpu > 1:
-                                if is_mass_batch:
-                                    new_outputs = []
-                                    for output in outputs:
-                                        new_outputs += output
-                                    outputs = new_outputs
 
-                            if is_mass_batch or self.num_gpu <= 1:
-                                translations = pad_sequence(outputs, batch_first=True,
-                                                            padding_value=model.text_processor.pad_token_id())
-                                translation_proposals = None
-                                if lex_dict is not None:
-                                    translation_proposals = list(map(lambda o: dataset.get_lex_suggestions(lex_dict, o,
-                                                                                                           model.text_processor.pad_token_id()),
-                                                                     outputs))
-                                    translation_proposals = pad_sequence(translation_proposals, batch_first=True,
-                                                                         padding_value=model.text_processor.pad_token_id())
-                                translation_pad_mask = (translations != model.text_processor.pad_token_id())
-                            else:
-                                translation_proposals = None
-                                if lex_dict is not None:
-                                    translation_proposals = [
-                                        pad_sequence(list(map(lambda o: dataset.get_lex_suggestions(lex_dict, o,
-                                                                                                    model.text_processor.pad_token_id()),
-                                                              output)), batch_first=True,
-                                                     padding_value=model.text_processor.pad_token_id()) for output in
-                                        outputs]
+                    if self.num_gpu == 1:
+                        targets = targets.to(predictions.device)
 
-                                translations = [pad_sequence(output, batch_first=True,
-                                                             padding_value=model.text_processor.pad_token_id()) for
-                                                output in outputs]
-                                translation_pad_mask = [t != model.text_processor.pad_token_id() for t in translations]
-                        model.train()
+                    loss = self.criterion(predictions, targets).mean()
+                    backward(loss, self.optimizer, self.fp16)
 
-                        if is_mass_batch:
-                            langs = batch["langs"].squeeze(0)
-                        else:
-                            langs = torch.cat([b["langs"] for b in batch])
-                        # Now use it for back-translation loss.
-                        predictions = self.model(src_inputs=translations,
-                                                 tgt_inputs=src_inputs,
-                                                 src_pads=translation_pad_mask,
-                                                 pad_idx=model.text_processor.pad_token_id(),
-                                                 src_langs=dst_langs,
-                                                 tgt_langs=langs, proposals=translation_proposals,
-                                                 log_softmax=True)
-                        if is_mass_batch:
-                            src_targets = src_inputs[:, 1:].contiguous().view(-1)
-                            src_mask_flat = src_pad_mask[:, 1:].contiguous().view(-1)
-                        else:
-                            src_targets = torch.cat(list(map(lambda s: s[:, 1:], src_inputs)))
-                            src_mask_flat = torch.cat(list(map(lambda s: s[:, 1:], src_pad_mask)))
-                        targets = src_targets[src_mask_flat]
-
-                        ntokens = targets.size(0)
-                    elif is_img_batch:
-                        src_inputs = [b["captions"] for b in batch]
-                        src_pad_mask = [b["caption_mask"] for b in batch]
-                        proposals = [b["proposal"] for b in batch] if lex_dict is not None else None
-                        langs = [b["langs"] for b in batch]
-                        if (self.mm_mode == "mixed" and random.random() <= .5) or self.mm_mode == "masked":
-                            pad_indices = [b["pad_idx"] for b in batch]
-                            if len(batch) < self.num_gpu:
-                                continue
-
-                            # For image masking, we are allowed to mask more than mask_prob
-                            mask_prob = random.uniform(self.mask_prob, 1.0)
-
-                            masked_info = list(
-                                map(lambda pi, si: mass_mask(mask_prob, pi, si, model.text_processor), pad_indices,
-                                    src_inputs))
-                            predictions = self.model(src_inputs=list(map(lambda m: m["src_text"], masked_info)),
-                                                     tgt_inputs=list(map(lambda m: m["to_recover"], masked_info)),
-                                                     tgt_positions=list(map(lambda m: m["positions"], masked_info)),
-                                                     src_pads=src_pad_mask,
-                                                     pad_idx=model.text_processor.pad_token_id(),
-                                                     src_langs=langs, batch=batch, proposals=proposals,
-                                                     log_softmax=True)
-                            targets = torch.cat(list(map(lambda m: m["targets"], masked_info)))
-                            ntokens = targets.size(0)
-                        else:
-                            neg_samples = [b["neg"] for b in batch]
-                            neg_mask = [b["neg_mask"] for b in batch]
-                            loss = self.model(src_inputs=src_inputs,
-                                              src_pads=src_pad_mask,
-                                              neg_samples=neg_samples,
-                                              neg_mask=neg_mask,
-                                              pad_idx=model.text_processor.pad_token_id(),
-                                              src_langs=langs, batch=batch, proposals=proposals,
-                                              log_softmax=True)
-                            is_contrastive = True
-
-                    elif not is_mass_batch:  # MT data
-                        src_inputs = batch["src_texts"].squeeze(0)
-                        src_mask = batch["src_pad_mask"].squeeze(0)
-                        tgt_inputs = batch["dst_texts"].squeeze(0)
-                        tgt_mask = batch["dst_pad_mask"].squeeze(0)
-                        src_langs = batch["src_langs"].squeeze(0)
-                        dst_langs = batch["dst_langs"].squeeze(0)
-                        proposals = batch["proposal"].squeeze(0) if lex_dict is not None else None
-                        if src_inputs.size(0) < self.num_gpu:
-                            continue
-                        predictions = self.model(src_inputs=src_inputs, tgt_inputs=tgt_inputs,
-                                                 src_pads=src_mask, tgt_mask=tgt_mask, src_langs=src_langs,
-                                                 tgt_langs=dst_langs, proposals=proposals,
-                                                 pad_idx=model.text_processor.pad_token_id(), log_softmax=True)
-                        targets = tgt_inputs[:, 1:].contiguous().view(-1)
-                        tgt_mask_flat = tgt_mask[:, 1:].contiguous().view(-1)
-                        targets = targets[tgt_mask_flat]
-                        ntokens = targets.size(0)
-                    else:  # MASS data
-                        src_inputs = batch["src_texts"].squeeze(0)
-                        pad_indices = batch["pad_idx"].squeeze(0)
-                        proposals = batch["proposal"].squeeze(0) if lex_dict is not None else None
-                        if src_inputs.size(0) < self.num_gpu:
-                            continue
-
-                        masked_info = mass_mask(self.mask_prob, pad_indices, src_inputs, model.text_processor)
-                        predictions = self.model(src_inputs=masked_info["src_text"],
-                                                 tgt_inputs=masked_info["to_recover"],
-                                                 tgt_positions=masked_info["positions"],
-                                                 pad_idx=model.text_processor.pad_token_id(),
-                                                 src_langs=batch["langs"].squeeze(0), proposals=proposals,
-                                                 log_softmax=True)
-                        targets = masked_info["targets"]
-                        ntokens = targets.size(0)
-
-                    if is_contrastive:  # Nothing to predict!
-                        backward(loss, self.optimizer, self.fp16)
-                        loss = loss.data
-                    elif ntokens > 0:
-                        if self.num_gpu == 1:
-                            targets = targets.to(predictions.device)
-
-                        loss = self.criterion(predictions, targets).mean()
-                        backward(loss, self.optimizer, self.fp16)
-
-                        loss = float(loss.data) * ntokens
-                        tokens += ntokens
-                        total_tokens += ntokens
+                    loss = float(loss.data) * ntokens
+                    tokens += ntokens
+                    total_tokens += ntokens
                     total_loss += loss
                     cur_loss += loss
 
@@ -287,10 +137,6 @@ class ImageMTTrainer:
                     self.optimizer.step()
                     step += 1
 
-                    if is_mass_batch and not fine_tune:
-                        mass_unmask(masked_info["src_text"], masked_info["src_mask"], masked_info["mask_idx"])
-                    if not is_contrastive and is_img_batch and not fine_tune:
-                        map(lambda m: mass_unmask(m["src_text"], m["src_mask"], m["mask_idx"]), masked_info)
 
                     if step % 50 == 0 and tokens > 0:
                         elapsed = time.time() - start

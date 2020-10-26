@@ -9,8 +9,7 @@ __Asuuming that Docker and NVIDIA docker is installed.__, follow the following s
 https://github.com/AdityaKashyap423/LwLLDatasetAPI
 cd LwLLDatasetAPI/dockers/gpu/
 git clone https://gitlab.lollllz.com/lwll/dataset_prep.git # needs user/pass for lolllz.com
-wget https://www.seas.upenn.edu/~rasooli/mt_pret.zip
-unzip mt_pret.zip  -d mt_pret
+
 cd ~/LwLLDatasetAPI
 ```
 
@@ -30,6 +29,11 @@ docker run --gpus all -it  ady
 4. Run the following command for setting SECRET key, and downloading data:
 ```bash
 git pull 
+apt install wget
+apt install unzip
+rm -rf mt_pret*
+wget https://www.seas.upenn.edu/~rasooli/mt_pret.zip
+unzip mt_pret.zip  -d mt_pret
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
 export SECRET_KEY= [PUT your secret key here!]
