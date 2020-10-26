@@ -10,7 +10,7 @@ class TrainOptions:
         self.clip = 1
         self.batch = 6000
         self.mask_prob = 0.5
-        self.learning_rate = 1e-5
+        self.learning_rate = 1e-6
         self.warmup = 4000
         self.step = 100000
         self.max_grad_norm = 1.0
@@ -55,7 +55,7 @@ class TranslateOptions:
         self.tokenizer_path=None
         self.model_path = None
         self.verbose = False
-        self.beam_width = 5
+        self.beam_width = 4
         self.max_len_a = 1.3
         self.max_len_b = 5
         self.len_penalty_ratio = 0.8
