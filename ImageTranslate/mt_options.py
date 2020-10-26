@@ -15,7 +15,7 @@ class TrainOptions:
         self.step = 100000
         self.max_grad_norm = 1.0
         self.continue_train = False
-        self.dropout = 0.2
+        self.dropout = 0.1
         self.encoder_layer = 6
         self.embed_dim = 768
         self.intermediate_layer_dim = 3072
