@@ -96,11 +96,7 @@ class ImageMTTrainer:
         for i, batches in enumerate(batch_zip):
             for batch in batches:
                 self.optimizer.zero_grad()
-                is_img_batch = isinstance(batch, list) and "captions" in batch[0]
-                is_mass_batch = not is_img_batch and "dst_texts" not in batch
-                is_contrastive = False
                 try:
-
                     src_inputs = batch["src_texts"].squeeze(0)
                     src_mask = batch["src_pad_mask"].squeeze(0)
                     tgt_inputs = batch["dst_texts"].squeeze(0)
@@ -158,10 +154,6 @@ class ImageMTTrainer:
 
                 except RuntimeError as err:
                     print(repr(err))
-                    print("Error processing", is_img_batch)
-                    if (isinstance(model, ImageMassSeq2Seq)) and is_img_batch:
-                        for b in batch:
-                            print("->", len(b["images"]), b["captions"].size())
                     torch.cuda.empty_cache()
 
             if i == shortest - 1:
