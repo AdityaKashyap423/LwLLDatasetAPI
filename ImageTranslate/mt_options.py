@@ -27,7 +27,7 @@ class TrainOptions:
         self.max_len_b = 5
         self.len_penalty_ratio = 0.8
         self.max_seq_len = 175
-        self.lang_decoder = True
+        self.lang_decoder = False
         self.nll = False
         self.fp16 = True
         self.mt_train_path = None
