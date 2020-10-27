@@ -204,8 +204,6 @@ class Seq2Seq(nn.Module):
             lang_dec, use_proposals, enc_layer, dec_layer, embed_dim, intermediate_dim, tie_embed, resnet_depth, freeze_image = pickle.load(
                 fp)
 
-            print("TRANSLATE OPTIONS", lang_dec, use_proposals, enc_layer, dec_layer, embed_dim, intermediate_dim,
-                  tie_embed, resnet_depth, freeze_image)
             mt_model = cls(text_processor=text_processor, lang_dec=lang_dec, use_proposals=use_proposals,
                            tie_embed=tie_embed, enc_layer=enc_layer, dec_layer=dec_layer, embed_dim=embed_dim,
                            intermediate_dim=intermediate_dim, freeze_image=freeze_image, resnet_depth=resnet_depth)
