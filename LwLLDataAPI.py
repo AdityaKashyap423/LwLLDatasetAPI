@@ -77,7 +77,6 @@ def deactivate_session(session_token, session="all"):
             r = requests.post(f"{url}/deactivate_session", json={'session_token': session},
                               headers=headers_active_session)
 
-
 def reactivate_session(session_token, secret):
     headers = {'user_secret': secret}
 
@@ -216,6 +215,7 @@ def save_to_file(data, save_path, filename):
             f.write("\n")
 
 
+
 def save_data(data, already_queried, session_token, checkpoint_number, data_type, save_path, args):
     all_data = {}
 
@@ -236,11 +236,12 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
         ar = []
         for element in data:
             if element["english"] and element["arabic"]:
-                cleaned_eng = element["english"].replace("\r", "").replace("\n", " ")
-                cleaned_ar = element["arabic"].replace("\r", "").replace("\n", " ")
+                cleaned_eng = element["english"].replace("\r", "").replace("\n"," ")
+                cleaned_ar = element["arabic"].replace("\r", "").replace("\n"," ")
                 if len(cleaned_ar) > 0 and len(cleaned_eng) > 0:
                     eng.append(cleaned_eng)
                     ar.append(cleaned_ar)
+
 
         if checkpoint_number != 1:
             ar_prev, eng_prev = load_training_data(save_path)
@@ -248,8 +249,10 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
             ar = ar_prev + ar
             eng = eng_prev + eng
 
+
         save_to_file(eng, save_path, "english.train")
         save_to_file(ar, save_path, "arabic.train")
+
 
         tokenizer = TextProcessor(tok_path)
 
@@ -258,7 +261,7 @@ def save_data(data, already_queried, session_token, checkpoint_number, data_type
                                 dst_txt_file=os.path.join(save_path, "english.train"))
         train_options = TrainOptions()
         train_options.mt_train_path = os.path.join(save_path, "train.batch")
-        num_iters = max(10, (len(eng) / train_options.batch))
+        num_iters = max(10, (len(eng) / (train_options.batch / 100)) * 50)
         train_options.step = int(min(args["iter"], num_iters))
         print("Training for", train_options.step, "iterations!")
         train_options.model_path = os.path.join(save_path, "train.model")
@@ -320,7 +323,7 @@ def training_data_new(path, save_path, args):
 
 
 def training_data_continue(path, save_path, args):
-    if args["session_token"] is None:
+    if  args["session_token"] is None:
         metadata = load_previous_checkpoint_data(save_path)
         session_token = metadata['session_token']
         already_queried = metadata['already_queried']
