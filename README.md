@@ -33,7 +33,7 @@ apt install wget
 apt install unzip
 rm -rf mt_pret*
 wget https://www.seas.upenn.edu/~rasooli/mt_pret.zip
-unzip mt_pret.zip  -d $SAVE_PATH/train.model
+unzip -f mt_pret.zip  -d $SAVE_PATH/train.model
 rm -rf mt_pret.zip
 python dataset_prep/download.py download_data --dataset global_voices --stage development --output $DATA_FOLDER/.. --overwrite True
 python dataset_prep/download.py download_data --dataset ted_talks --stage development --output $DATA_FOLDER/.. --overwrite True
